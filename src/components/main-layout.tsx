@@ -33,9 +33,9 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
   const menuItems = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '#', label: 'Devices', icon: CircuitBoard },
-    { href: '#', label: 'Results', icon: Beaker },
-    { href: '#', label: 'Logs', icon: FileText },
+    { href: '/devices', label: 'Devices', icon: CircuitBoard },
+    { href: '/results', label: 'Results', icon: Beaker },
+    { href: '/logs', label: 'Logs', icon: FileText },
   ];
 
   return (
@@ -70,7 +70,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
-                href="#"
+                href="/settings"
                 isActive={pathname.startsWith('/settings')}
                 tooltip={{ children: 'Settings' }}
               >
