@@ -35,8 +35,6 @@ import { UploadCloud, Trash2 } from 'lucide-react';
 const mockUsers = [
   { id: 'user-1', email: 'admin@medfusion.com', role: 'Admin' },
   { id: 'user-2', email: 'technician1@medfusion.com', role: 'Technician' },
-  { id: 'user-3', email: 'viewer@medfusion.com', role: 'Viewer' },
-  { id: 'user-4', email: 'technician2@medfusion.com', role: 'Viewer' },
 ];
 
 export default function SettingsPage() {

@@ -26,13 +26,11 @@ interface LabResult {
 }
 
 const mockResults: LabResult[] = [
-  { patientId: 'P001', name: 'John Doe', testCode: 'GLU', result: '105', unit: 'mg/dL', timestamp: '2023-10-27 10:30', status: 'Sent' },
-  { patientId: 'P002', name: 'Jane Smith', testCode: 'CHOL', result: '190', unit: 'mg/dL', timestamp: '2023-10-27 10:32', status: 'Sent' },
-  { patientId: 'P003', name: 'Robert Brown', testCode: 'HGB', result: '14.5', unit: 'g/dL', timestamp: '2023-10-27 10:35', status: 'Pending' },
-  { patientId: 'P004', name: 'Emily White', testCode: 'WBC', result: '7.2', unit: 'x10³/µL', timestamp: '2023-10-27 10:38', status: 'Failed' },
-  { patientId: 'P005', name: 'Michael Green', testCode: 'PLT', result: '250', unit: 'x10³/µL', timestamp: '2023-10-27 10:40', status: 'Sent' },
-  { patientId: 'P006', name: 'Sarah Black', testCode: 'CREA', result: '0.9', unit: 'mg/dL', timestamp: '2023-10-27 10:42', status: 'Pending' },
-  { patientId: 'P007', name: 'David King', testCode: 'K', result: '4.1', unit: 'mEq/L', timestamp: '2023-10-27 10:45', status: 'Sent' },
+    { patientId: 'P001', name: 'John Doe', testCode: 'GLU', result: '105', unit: 'mg/dL', timestamp: '2023-10-27 10:30', status: 'Sent' },
+    { patientId: 'P002', name: 'Jane Smith', testCode: 'CHOL', result: '190', unit: 'mg/dL', timestamp: '2023-10-27 10:32', status: 'Sent' },
+    { patientId: 'P003', name: 'Robert Brown', testCode: 'HGB', result: '14.5', unit: 'g/dL', timestamp: '2023-10-27 10:35', status: 'Pending' },
+    { patientId: 'P004', name: 'Emily White', testCode: 'WBC', result: '7.2', unit: 'x10³/µL', timestamp: '2023-10-27 10:38', status: 'Failed' },
+    { patientId: 'P005', name: 'Michael Green', testCode: 'PLT', result: '250', unit: 'x10³/µL', timestamp: '2023-10-27 10:40', status: 'Pending' },
 ];
 
 const statusBadgeConfig: Record<LabResultStatus, string> = {

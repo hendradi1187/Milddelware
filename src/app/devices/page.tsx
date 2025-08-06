@@ -19,9 +19,7 @@ interface Device {
 const mockDevices: Device[] = [
   { id: 'dev-001', name: 'Hematology Analyzer XL-200', status: 'connected', lastCommunication: '2023-10-27 11:05:12' },
   { id: 'dev-002', name: 'Chemistry Analyzer C-501', status: 'disconnected', lastCommunication: '2023-10-26 18:45:03' },
-  { id: 'dev-003', name: 'Immunoassay System I-800', status: 'connected', lastCommunication: '2023-10-27 11:04:58' },
-  { id: 'dev-004', name: 'Centrifuge Z-446', status: 'error', lastCommunication: '2023-10-27 09:15:30' },
-  { id: 'dev-005', name: 'Microscope M-300', status: 'disconnected', lastCommunication: '2023-10-25 14:22:10' },
+  { id: 'dev-003', name: 'Immunoassay System I-800', status: 'error', lastCommunication: '2023-10-27 09:15:30' },
 ];
 
 const statusConfig: Record<
