@@ -11,7 +11,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarInset,
 } from '@/components/ui/sidebar';
 import {
   LayoutDashboard,
@@ -20,7 +19,6 @@ import {
   FileText,
   Settings,
   FlaskConical,
-  User,
   Bell,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -28,15 +26,31 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { usePathname } from 'next/navigation';
 
+// Mock user role
+const userRole = 'Admin'; // Can be 'Admin', 'Technician', or 'Viewer'
+
+const allMenuItems = [
+  { href: '/', label: 'Dashboard', icon: LayoutDashboard, roles: ['Admin', 'Technician', 'Viewer'] },
+  { href: '/devices', label: 'Devices', icon: CircuitBoard, roles: ['Admin', 'Technician'] },
+  { href: '/results', label: 'Results', icon: Beaker, roles: ['Admin', 'Technician', 'Viewer'] },
+  { href: '/logs', label: 'Logs', icon: FileText, roles: ['Admin', 'Technician'] },
+  { href: '/settings', label: 'Settings', icon: Settings, roles: ['Admin'] },
+];
+
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  const menuItems = [
-    { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/devices', label: 'Devices', icon: CircuitBoard },
-    { href: '/results', label: 'Results', icon: Beaker },
-    { href: '/logs', label: 'Logs', icon: FileText },
-  ];
+  const menuItems = allMenuItems.filter(item => item.roles.includes(userRole));
+  const settingsItem = allMenuItems.find(item => item.href === '/settings');
+
+  // Filter out settings from the main list if it exists
+  const mainMenuItems = menuItems.filter(item => item.href !== '/settings');
+  const userCanSeeSettings = settingsItem && settingsItem.roles.includes(userRole);
+
+  const getPageTitle = () => {
+    const currentItem = allMenuItems.find(item => pathname === item.href);
+    return currentItem ? currentItem.label : 'Dashboard';
+  }
 
   return (
     <SidebarProvider>
@@ -52,7 +66,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         </SidebarHeader>
         <SidebarContent className="p-2">
           <SidebarMenu>
-            {menuItems.map((item) => (
+            {mainMenuItems.map((item) => (
               <SidebarMenuItem key={item.label}>
                 <SidebarMenuButton
                   href={item.href}
@@ -67,25 +81,27 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                href="/settings"
-                isActive={pathname.startsWith('/settings')}
-                tooltip={{ children: 'Settings' }}
-              >
-                <Settings />
-                <span>Settings</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
+          {userCanSeeSettings && settingsItem && (
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  href={settingsItem.href}
+                  isActive={pathname.startsWith(settingsItem.href)}
+                  tooltip={{ children: settingsItem.label }}
+                >
+                  <settingsItem.icon />
+                  <span>{settingsItem.label}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          )}
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset>
+      <div className="flex flex-1 flex-col">
         <header className="flex h-14 items-center justify-between gap-4 border-b bg-card p-4 sticky top-0 z-10">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="md:hidden" />
-            <h1 className="text-xl font-semibold">Dashboard</h1>
+            <h1 className="text-xl font-semibold">{getPageTitle()}</h1>
           </div>
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" aria-label="Notifications">
@@ -103,25 +119,23 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">Admin</p>
+                    <p className="text-sm font-medium leading-none">Admin User</p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      admin@medfusion.com
+                      {userRole}
                     </p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Profile</DropdownMenuItem>
-                <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem>Log out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </header>
-        <main className="flex-1 p-4 md:p-6 lg:p-8">
+        <main className="flex-1 p-4 md:p-6 lg:p-8 bg-background">
             {children}
         </main>
-      </SidebarInset>
+      </div>
     </SidebarProvider>
   );
 }

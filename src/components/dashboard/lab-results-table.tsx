@@ -1,3 +1,6 @@
+'use client';
+
+import * as React from 'react';
 import {
   Table,
   TableBody,
@@ -7,8 +10,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type LabResultStatus = 'Pending' | 'Sent' | 'Failed';
 
@@ -39,18 +42,32 @@ const statusBadgeConfig: Record<LabResultStatus, string> = {
 };
 
 export function LabResultsTable() {
+  const [statusFilter, setStatusFilter] = React.useState<LabResultStatus | 'All'>('All');
+
+  const filteredResults = mockResults.filter(
+    (result) => statusFilter === 'All' || result.status === statusFilter
+  );
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Real-time Lab Results</CardTitle>
-        <CardDescription>Displaying the latest results from connected devices.</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <Select value={statusFilter} onValueChange={(value: LabResultStatus | 'All') => setStatusFilter(value)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="All">All Statuses</SelectItem>
+            <SelectItem value="Pending">Pending</SelectItem>
+            <SelectItem value="Sent">Sent</SelectItem>
+            <SelectItem value="Failed">Failed</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+       <div className="border rounded-md">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Patient ID</TableHead>
-              <TableHead className="hidden md:table-cell">Name</TableHead>
               <TableHead>Test</TableHead>
               <TableHead>Result</TableHead>
               <TableHead className="hidden lg:table-cell">Unit</TableHead>
@@ -59,10 +76,9 @@ export function LabResultsTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mockResults.map((result) => (
+            {filteredResults.map((result) => (
               <TableRow key={result.patientId}>
                 <TableCell className="font-medium">{result.patientId}</TableCell>
-                <TableCell className="hidden md:table-cell">{result.name}</TableCell>
                 <TableCell>{result.testCode}</TableCell>
                 <TableCell className="font-semibold">{result.result}</TableCell>
                 <TableCell className="hidden lg:table-cell">{result.unit}</TableCell>
@@ -74,9 +90,16 @@ export function LabResultsTable() {
                 </TableCell>
               </TableRow>
             ))}
+             {filteredResults.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className="h-24 text-center">
+                  No results found.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
