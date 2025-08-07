@@ -6,12 +6,12 @@ import {getFirestore} from 'firebase/firestore';
 import {getStorage} from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: 'TODO: YOUR API KEY',
-  authDomain: 'TODO: YOUR AUTH DOMAIN',
-  projectId: 'TODO: YOUR PROJECT ID',
-  storageBucket: 'TODO: YOUR STORAGE BUCKET',
-  messagingSenderId: 'TODO: YOUR MESSAGING SENDER ID',
-  appId: 'TODO: YOUR APP ID',
+  apiKey: 'YOUR_API_KEY',
+  authDomain: 'YOUR_PROJECT_ID.firebaseapp.com',
+  projectId: 'YOUR_PROJECT_ID',
+  storageBucket: 'YOUR_PROJECT_ID.appspot.com',
+  messagingSenderId: 'YOUR_SENDER_ID',
+  appId: 'YOUR_APP_ID',
 };
 
 // Initialize Firebase
