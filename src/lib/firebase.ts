@@ -6,12 +6,13 @@ import {getFirestore} from 'firebase/firestore';
 import {getStorage} from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: 'YOUR_API_KEY',
-  authDomain: 'YOUR_PROJECT_ID.firebaseapp.com',
-  projectId: 'YOUR_PROJECT_ID',
-  storageBucket: 'YOUR_PROJECT_ID.appspot.com',
-  messagingSenderId: 'YOUR_SENDER_ID',
-  appId: 'YOUR_APP_ID',
+  "projectId": "labbridge-medfusion",
+  "appId": "1:1099034823548:web:61c80294903e35b85bf2f9",
+  "storageBucket": "labbridge-medfusion.firebasestorage.app",
+  "apiKey": "AIzaSyCpxk53kSZ3rosR7FFIP6HzzJBXO9zupvA",
+  "authDomain": "labbridge-medfusion.firebaseapp.com",
+  "measurementId": "",
+  "messagingSenderId": "1099034823548"
 };
 
 // Initialize Firebase
