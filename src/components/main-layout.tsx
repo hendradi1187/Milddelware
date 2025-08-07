@@ -28,9 +28,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { usePathname } from 'next/navigation';
 import { Skeleton } from './ui/skeleton';
-
-// Mock user role
-const userRole = 'Admin'; // Can be 'Admin', 'Technician', or 'QA'
+import { useAuth } from '@/hooks/use-auth';
 
 const allMenuItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard, roles: ['Admin', 'Technician', 'QA'] },
@@ -43,21 +41,28 @@ const allMenuItems = [
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [user, setUser] = React.useState<{ name: string; role: string } | null>(null);
+  const { user, userRole, loading, logout } = useAuth();
+  
+  if (loading) {
+     return (
+        <div className="flex h-screen w-full items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+                <FlaskConical className="h-12 w-12 animate-pulse text-primary" />
+                <p className="text-muted-foreground">Loading LabBridge Medfusion...</p>
+            </div>
+        </div>
+    );
+  }
 
-  React.useEffect(() => {
-    // Simulate fetching user data
-    setTimeout(() => {
-        setUser({ name: 'Admin User', role: 'Admin' });
-    }, 500);
-  }, []);
+  if (!user) {
+    return null; // Or a redirect component, but useAuth hook handles redirection
+  }
 
-  const menuItems = allMenuItems.filter(item => user && item.roles.includes(user.role));
+  const menuItems = allMenuItems.filter(item => userRole && item.roles.includes(userRole));
   const settingsItem = allMenuItems.find(item => item.href === '/settings');
 
-  // Filter out settings from the main list if it exists
   const mainMenuItems = menuItems.filter(item => item.href !== '/settings');
-  const userCanSeeSettings = settingsItem && user && settingsItem.roles.includes(user.role);
+  const userCanSeeSettings = settingsItem && userRole && settingsItem.roles.includes(userRole);
 
   const getPageTitle = () => {
     const currentItem = allMenuItems.find(item => pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href)));
@@ -102,7 +107,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                   tooltip={{ children: settingsItem.label }}
                 >
                   <settingsItem.icon />
-                  <span>{item.label}</span>
+                  <span>{settingsItem.label}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -121,41 +126,28 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                {user ? (
-                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                        <Avatar className="h-8 w-8">
-                            <AvatarImage src="https://placehold.co/40x40.png" alt={user.name} data-ai-hint="person portrait"/>
-                            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                    </Button>
-                ) : (
-                    <Skeleton className="h-8 w-8 rounded-full" />
-                )}
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                        <AvatarImage src={user.photoURL ?? "https://placehold.co/40x40.png"} alt={user.displayName ?? 'User'} data-ai-hint="person portrait"/>
+                        <AvatarFallback>{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                {user ? (
-                    <>
-                        <DropdownMenuLabel>
-                            <div className="flex flex-col space-y-1">
-                                <p className="text-sm font-medium leading-none">{user.name}</p>
-                                <p className="text-xs leading-none text-muted-foreground">
-                                {user.role}
-                                </p>
-                            </div>
-                        </DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>Profile</DropdownMenuItem>
-                        <DropdownMenuItem>
-                            <LogOut className="mr-2 h-4 w-4" />
-                            <span>Log out</span>
-                        </DropdownMenuItem>
-                    </>
-                ) : (
-                    <div className="p-2">
-                        <Skeleton className="h-5 w-24 mb-2" />
-                        <Skeleton className="h-4 w-16" />
+                <DropdownMenuLabel>
+                    <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{user.displayName ?? user.email}</p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                        {userRole}
+                        </p>
                     </div>
-                )}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>Profile</DropdownMenuItem>
+                <DropdownMenuItem onClick={logout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

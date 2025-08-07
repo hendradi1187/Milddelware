@@ -12,6 +12,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { collection, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { Timestamp } from 'firebase/firestore';
 
 type DeviceStatus = 'connected' | 'disconnected' | 'error';
 
@@ -22,12 +25,6 @@ interface Device {
   status: DeviceStatus;
   lastCommunication: string;
 }
-
-const mockDevices: Device[] = [
-  { id: 'dev-001', name: 'Hematology Analyzer XL-200', type: 'Hematology', status: 'connected', lastCommunication: '2023-10-27 11:05:12' },
-  { id: 'dev-002', name: 'Chemistry Analyzer C-501', type: 'Chemistry', status: 'disconnected', lastCommunication: '2023-10-26 18:45:03' },
-  { id: 'dev-003', name: 'Immunoassay System I-800', type: 'Immunoassay', status: 'error', lastCommunication: '2023-10-27 09:15:30' },
-];
 
 const statusConfig: Record<
   DeviceStatus,
@@ -60,37 +57,69 @@ export default function DevicesPage() {
   const [devices, setDevices] = React.useState<Device[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+
+  const fetchDevices = React.useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const querySnapshot = await getDocs(collection(db, 'devices'));
+      const devicesData = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        const lastComm = data.lastCommunication instanceof Timestamp 
+          ? data.lastCommunication.toDate() 
+          : new Date();
+        
+        return {
+          id: doc.id,
+          name: data.name,
+          type: data.type,
+          status: data.status,
+          lastCommunication: lastComm.toLocaleString(),
+        };
+      }) as Device[];
+      setDevices(devicesData);
+    } catch (error) {
+      console.error("Error fetching devices:", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch devices from Firestore.' });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]);
+  
 
   React.useEffect(() => {
-    // Simulate fetching data
-    setTimeout(() => {
-      setDevices(mockDevices);
-      setIsLoading(false);
-    }, 1000);
-  }, []);
+    fetchDevices();
+  }, [fetchDevices]);
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setIsRefreshing(true);
-    setTimeout(() => {
-      // In a real app, you would refetch from Firestore here
-      toast({ title: "Success", description: "Device list refreshed." });
-      setIsRefreshing(false);
-    }, 1500);
+    await fetchDevices();
+    toast({ title: "Success", description: "Device list refreshed." });
+    setIsRefreshing(false);
   };
 
-  const handleAddDevice = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleAddDevice = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const newDevice: Device = {
+    const newDevice = {
       id: formData.get('id') as string,
       name: formData.get('name') as string,
       type: formData.get('type') as string,
       status: 'disconnected', // Default status
-      lastCommunication: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      lastCommunication: serverTimestamp(),
     };
-    setDevices(prev => [...prev, newDevice]);
-    toast({ title: "Success", description: "Device added successfully." });
-    // Close dialog after submission - requires managing dialog open state
+    
+    try {
+      // In a real app, you would probably want to use the ID field from the form as the document ID
+      // For simplicity, we'll let firestore auto-generate an ID
+      await addDoc(collection(db, "devices"), newDevice);
+      toast({ title: "Success", description: "Device added successfully." });
+      setIsDialogOpen(false); // Close dialog
+      await fetchDevices(); // Refresh list
+    } catch(error) {
+       console.error("Error adding device:", error);
+       toast({ variant: 'destructive', title: 'Error', description: 'Could not add device.' });
+    }
   };
 
 
@@ -104,11 +133,11 @@ export default function DevicesPage() {
               <CardDescription>Manage and monitor your lab devices.</CardDescription>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
-                <RefreshCw className={cn("mr-2 h-4 w-4", isRefreshing && "animate-spin")} />
+              <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing || isLoading}>
+                <RefreshCw className={cn("mr-2 h-4 w-4", (isRefreshing || isLoading) && "animate-spin")} />
                 Refresh
               </Button>
-              <Dialog>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button><PlusCircle className="mr-2 h-4 w-4" /> Add Device</Button>
                 </DialogTrigger>
@@ -183,6 +212,13 @@ export default function DevicesPage() {
                   </TableRow>
                 )
               })}
+              {!isLoading && devices.length === 0 && (
+                <TableRow>
+                    <TableCell colSpan={5} className="h-24 text-center">
+                        No devices found. Add a device to get started.
+                    </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
