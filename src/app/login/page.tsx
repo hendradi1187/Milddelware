@@ -13,8 +13,8 @@ import { useRouter } from 'next/navigation';
 export default function LoginPage() {
   const { toast } = useToast();
   const router = useRouter();
-  const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
+  const [email, setEmail] = React.useState('admin@medfusion.com');
+  const [password, setPassword] = React.useState('password123');
   const [isLoading, setIsLoading] = React.useState(false);
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -29,7 +29,7 @@ export default function LoginPage() {
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: error.message || "An unknown error occurred.",
+        description: "Please go to your Firebase Console > Authentication > Users to add this user, or use an existing one.",
       });
     } finally {
       setIsLoading(false);
@@ -75,8 +75,8 @@ export default function LoginPage() {
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex justify-center text-xs">
-          <p>Contact support for access</p>
+        <CardFooter className="flex justify-center text-xs text-center">
+          <p className="text-muted-foreground">Note: You need to add this user in your Firebase project's Authentication section for login to work.</p>
         </CardFooter>
       </Card>
     </div>
