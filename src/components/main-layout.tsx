@@ -20,6 +20,7 @@ import {
   Settings,
   FlaskConical,
   Bell,
+  ClipboardCheck,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -27,12 +28,13 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { usePathname } from 'next/navigation';
 
 // Mock user role
-const userRole = 'Admin'; // Can be 'Admin', 'Technician', or 'Viewer'
+const userRole = 'Admin'; // Can be 'Admin', 'Technician', or 'QA'
 
 const allMenuItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard, roles: ['Admin', 'Technician', 'Viewer'] },
+  { href: '/', label: 'Dashboard', icon: LayoutDashboard, roles: ['Admin', 'Technician', 'QA'] },
   { href: '/devices', label: 'Devices', icon: CircuitBoard, roles: ['Admin', 'Technician'] },
-  { href: '/results', label: 'Results', icon: Beaker, roles: ['Admin', 'Technician', 'Viewer'] },
+  { href: '/results', label: 'Results', icon: Beaker, roles: ['Admin', 'Technician', 'QA'] },
+  { href: '/qa', label: 'QA / QC', icon: ClipboardCheck, roles: ['Admin', 'QA'] },
   { href: '/logs', label: 'Logs', icon: FileText, roles: ['Admin', 'Technician'] },
   { href: '/settings', label: 'Settings', icon: Settings, roles: ['Admin'] },
 ];
@@ -48,7 +50,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const userCanSeeSettings = settingsItem && settingsItem.roles.includes(userRole);
 
   const getPageTitle = () => {
-    const currentItem = allMenuItems.find(item => pathname === item.href);
+    const currentItem = allMenuItems.find(item => pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href)));
     return currentItem ? currentItem.label : 'Dashboard';
   }
 

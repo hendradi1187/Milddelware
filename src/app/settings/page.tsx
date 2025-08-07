@@ -35,6 +35,7 @@ import { UploadCloud, Trash2 } from 'lucide-react';
 const mockUsers = [
   { id: 'user-1', email: 'admin@medfusion.com', role: 'Admin' },
   { id: 'user-2', email: 'technician1@medfusion.com', role: 'Technician' },
+  { id: 'user-3', email: 'qa.specialist@medfusion.com', role: 'QA' },
 ];
 
 export default function SettingsPage() {
@@ -85,7 +86,7 @@ export default function SettingsPage() {
                         <SelectContent>
                           <SelectItem value="Admin">Admin</SelectItem>
                           <SelectItem value="Technician">Technician</SelectItem>
-                          <SelectItem value="Viewer">Viewer</SelectItem>
+                          <SelectItem value="QA">QA</SelectItem>
                         </SelectContent>
                       </Select>
                     </TableCell>

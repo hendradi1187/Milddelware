@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-type LabResultStatus = 'Pending' | 'Sent' | 'Failed';
+type LabResultStatus = 'Pending' | 'Sent' | 'Failed' | 'QC';
 
 interface LabResult {
   patientId: string;
@@ -28,15 +28,16 @@ interface LabResult {
 const mockResults: LabResult[] = [
     { patientId: 'P001', name: 'John Doe', testCode: 'GLU', result: '105', unit: 'mg/dL', timestamp: '2023-10-27 10:30', status: 'Sent' },
     { patientId: 'P002', name: 'Jane Smith', testCode: 'CHOL', result: '190', unit: 'mg/dL', timestamp: '2023-10-27 10:32', status: 'Sent' },
-    { patientId: 'P003', name: 'Robert Brown', testCode: 'HGB', result: '14.5', unit: 'g/dL', timestamp: '2023-10-27 10:35', status: 'Pending' },
+    { patientId: 'QC-01', name: 'QC Level 1', testCode: 'HGB', result: '14.5', unit: 'g/dL', timestamp: '2023-10-27 10:35', status: 'QC' },
     { patientId: 'P004', name: 'Emily White', testCode: 'WBC', result: '7.2', unit: 'x10³/µL', timestamp: '2023-10-27 10:38', status: 'Failed' },
     { patientId: 'P005', name: 'Michael Green', testCode: 'PLT', result: '250', unit: 'x10³/µL', timestamp: '2023-10-27 10:40', status: 'Pending' },
 ];
 
 const statusBadgeConfig: Record<LabResultStatus, string> = {
-    Sent: 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200',
-    Pending: 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200',
-    Failed: 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200',
+    Sent: 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100',
+    Pending: 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100',
+    Failed: 'bg-red-100 text-red-800 border-red-200 hover:bg-red-100',
+    QC: 'bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-100',
 };
 
 export function LabResultsTable() {
@@ -58,6 +59,7 @@ export function LabResultsTable() {
             <SelectItem value="Pending">Pending</SelectItem>
             <SelectItem value="Sent">Sent</SelectItem>
             <SelectItem value="Failed">Failed</SelectItem>
+            <SelectItem value="QC">QC</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -74,8 +76,8 @@ export function LabResultsTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredResults.map((result) => (
-              <TableRow key={result.patientId}>
+            {filteredResults.map((result, index) => (
+              <TableRow key={`${result.patientId}-${index}`}>
                 <TableCell className="font-medium">{result.patientId}</TableCell>
                 <TableCell>{result.testCode}</TableCell>
                 <TableCell className="font-semibold">{result.result}</TableCell>

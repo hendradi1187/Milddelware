@@ -1,8 +1,9 @@
+'use client';
+
 import { MainLayout } from '@/components/main-layout';
-import { DeviceStatusCard } from '@/components/dashboard/device-status-card';
 import { LabResultsTable } from '@/components/dashboard/lab-results-table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, FileCheck, FileClock, Wifi } from 'lucide-react';
+import { AlertCircle, FileClock, Wifi } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function DashboardPage() {
@@ -16,9 +17,9 @@ export default function DashboardPage() {
         {failedDispatches > 5 && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
+            <AlertTitle>Critical Alert</AlertTitle>
             <AlertDescription>
-              More than 5 results failed to dispatch. Please check the logs.
+              More than 5 results failed to dispatch. Please check the logs and system status.
             </AlertDescription>
           </Alert>
         )}
@@ -55,7 +56,14 @@ export default function DashboardPage() {
           </Card>
         </div>
         <div>
-          <LabResultsTable />
+          <Card>
+            <CardHeader>
+                <CardTitle>Recent Lab Results</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <LabResultsTable />
+            </CardContent>
+          </Card>
         </div>
       </div>
     </MainLayout>
