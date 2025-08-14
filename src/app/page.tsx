@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -7,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { Wifi, FileClock, AlertCircle, CheckCircle, HelpCircle, AlertTriangle, SlidersHorizontal } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, Legend } from 'recharts';
-import type { LabResult, LabResultStatus } from '@/components/dashboard/lab-results-table'; // Assuming types are exported
+import type { LabResult } from '@/components/dashboard/lab-results-table'; // Assuming types are exported
 import { mockResults } from '@/components/dashboard/lab-results-table'; // Assuming mock data is exported
 
 // Function to process raw results into hourly stats

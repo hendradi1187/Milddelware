@@ -48,7 +48,7 @@ export default function QAPage() {
                             <CardDescription>Review and manage Quality Control results.</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <LabResultsTable />
+                            <LabResultsTable statusFilter='QC' />
                         </CardContent>
                     </Card>
                 </CardContent>
