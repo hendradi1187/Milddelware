@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation';
 export default function LoginPage() {
   const { toast } = useToast();
   const router = useRouter();
-  const [email, setEmail] = React.useState('admin@medfusion.com');
+  const [email, setEmail] = React.useState('hdinata935@gmail.com');
   const [password, setPassword] = React.useState('password123');
   const [isLoading, setIsLoading] = React.useState(false);
 
