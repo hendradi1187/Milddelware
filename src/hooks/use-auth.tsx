@@ -18,10 +18,10 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Helper function to create a mock user for simulation
-const createMockUser = (): User => ({
-  uid: 'mock-admin-uid',
-  email: 'admin@medfusion.com',
-  displayName: 'Admin (Simulated)',
+const createMockUser = (role: UserRole): User => ({
+  uid: `mock-${role?.toLowerCase()}-uid`,
+  email: `${role?.toLowerCase()}@medfusion.com`,
+  displayName: `${role} (Simulated)`,
   emailVerified: true,
   isAnonymous: false,
   metadata: {},
@@ -66,10 +66,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       } else {
         // --- SIMULATION BYPASS ---
-        console.warn("SIMULATION MODE: Bypassing login and mocking Admin user.");
-        const mockUser = createMockUser();
+        // Change this value to 'Admin', 'Technician', or 'QA' to test different roles
+        const simulatedRole: UserRole = 'Technician';
+        console.warn(`SIMULATION MODE: Bypassing login and mocking ${simulatedRole} user.`);
+        const mockUser = createMockUser(simulatedRole);
         setUser(mockUser);
-        setUserRole('Admin');
+        setUserRole(simulatedRole);
       }
       setLoading(false);
     });
@@ -79,7 +81,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   
   const logout = async () => {
     // In simulation mode, we just redirect. In a real scenario, we sign out.
-    if (user && user.uid !== 'mock-admin-uid') {
+    if (user && !user.uid.startsWith('mock-')) {
         await signOut(auth);
     }
     // Clear state and redirect to login
