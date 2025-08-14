@@ -6,9 +6,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Trash2, Edit, ShieldCheck, UserCog, Eye } from 'lucide-react';
+import { MoreHorizontal, Trash2, Edit, ShieldCheck, UserCog, Eye, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AddUserWizard } from '@/components/settings/add-user-wizard';
+import Link from 'next/link';
 
 export type UserRole = 'Admin' | 'Technician' | 'QA';
 
@@ -48,6 +49,11 @@ export default function UserManagementPage() {
 
   return (
     <MainLayout>
+       <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-4">
+        <Link href="/settings" className="hover:text-primary transition-colors">Settings</Link>
+        <ChevronRight className="h-4 w-4" />
+        <span className="font-medium text-foreground">User Management</span>
+      </div>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
