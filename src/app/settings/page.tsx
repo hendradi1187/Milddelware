@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import * as React from 'react';
 import Link from 'next/link';
-import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 interface Module {
   id: string;
@@ -37,13 +37,6 @@ const systemModules: Module[] = [
         href: '/settings/user-management'
     },
     {
-        id: 'mapping',
-        title: 'Data Mapping Engine',
-        description: 'Mapping kode pemeriksaan → kode SATUSEHAT',
-        icon: GitFork,
-        href: '/settings/data-mapping'
-    },
-    {
         id: 'database',
         title: 'Database Management',
         description: 'PostgreSQL/MySQL for server, SQLite for offline',
@@ -51,18 +44,32 @@ const systemModules: Module[] = [
         href: '/settings/database-management'
     },
     {
-        id: 'offline',
-        title: 'Online/Offline Capability',
-        description: 'System automatically saves data locally when offline and syncs when reconnected. No setup required.',
-        icon: CloudCog,
-        href: '/settings/online-offline'
-    },
-    {
         id: 'instrument-comm',
         title: 'Komunikasi Instrumen',
         description: 'Mudah integrasi TCP/IP ticom',
         icon: Network,
         href: '/settings/instrument-communication'
+    },
+     {
+        id: 'lis-comm',
+        title: 'Komunikasi LIS & SATUSEHAT',
+        description: 'Mudah integrasi SPI',
+        icon: ArrowRightLeft,
+        href: '/settings/lis-communication'
+    },
+    {
+        id: 'mapping',
+        title: 'Data Mapping Engine',
+        description: 'Mapping kode pemeriksaan → kode SATUSEHAT',
+        icon: GitFork,
+        href: '/settings/data-mapping'
+    },
+    {
+        id: 'offline',
+        title: 'Online/Offline Capability',
+        description: 'System automatically saves data locally when offline and syncs when reconnected.',
+        icon: CloudCog,
+        href: '/settings/online-offline'
     },
     {
         id: 'business-logic',
@@ -72,11 +79,11 @@ const systemModules: Module[] = [
         href: '/settings/business-logic'
     },
     {
-        id: 'lis-comm',
-        title: 'Komunikasi LIS & SATUSEHAT',
-        description: 'Mudah integrasi SPI',
-        icon: ArrowRightLeft,
-        href: '/settings/lis-communication'
+        id: 'alerts',
+        title: 'Alert & Notification System',
+        description: 'Error, pending, sukses',
+        icon: Bell,
+        href: '/settings/alerts'
     },
     {
         id: 'logging',
@@ -84,13 +91,6 @@ const systemModules: Module[] = [
         description: 'Status koneksi, error, riwayat',
         icon: AlertCircle,
         href: '/logs'
-    },
-    {
-        id: 'alerts',
-        title: 'Alert & Notification System',
-        description: 'Error, pending, sukses',
-        icon: Bell,
-        href: '/settings/alerts'
     },
     {
         id: 'docs',
@@ -129,9 +129,27 @@ export default function SettingsPage() {
     <MainLayout>
       <div className="flex flex-col gap-6">
         <Card>
+            <CardHeader>
+                <CardTitle className="text-2xl font-bold">System Architecture</CardTitle>
+                <CardDescription>Diagram of interaction between middleware modules.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="p-4 border rounded-lg bg-muted/20">
+                    <Image
+                        src="https://placehold.co/1200x600.png"
+                        alt="System Architecture Diagram"
+                        width={1200}
+                        height={600}
+                        className="rounded-md"
+                        data-ai-hint="system architecture diagram"
+                    />
+                </div>
+            </CardContent>
+        </Card>
+        <Card>
           <CardHeader>
             <CardTitle className="text-2xl font-bold">System Modules</CardTitle>
-            <CardDescription>Overview of all integrated middleware system modules.</CardDescription>
+            <CardDescription>Click on a module to view its details and configuration.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
