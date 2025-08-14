@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Wifi, WifiOff, TriangleAlert, type LucideIcon, PlusCircle, RefreshCw } from 'lucide-react';
+import { Wifi, WifiOff, TriangleAlert, type LucideIcon, PlusCircle, Search, Clock, Server, Power, PowerOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -13,194 +13,293 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 
-type DeviceStatus = 'connected' | 'disconnected' | 'error';
+type DeviceStatus = 'Online' | 'Offline' | 'Standby' | 'Error';
 
 interface Device {
   id: string;
   name: string;
-  type: string;
+  model: string;
+  connectionType: string;
+  serialNumber: string;
+  firmwareVersion: string;
   status: DeviceStatus;
-  lastCommunication: string;
+  lastSync: string;
+  logs: string[];
+  mapping: { itemCode: string; glul: string }[];
 }
 
 const statusConfig: Record<
   DeviceStatus,
   {
     label: string;
-    icon: LucideIcon;
-    badgeClass: string;
+    color: string;
   }
 > = {
-  connected: {
-    label: 'Connected',
-    icon: Wifi,
-    badgeClass: 'bg-green-100 text-green-800 border-green-200 hover:bg-green-100',
+  Online: {
+    label: 'Online',
+    color: 'bg-green-500',
   },
-  disconnected: {
-    label: 'Disconnected',
-    icon: WifiOff,
-    badgeClass: 'bg-stone-100 text-stone-800 border-stone-200 hover:bg-stone-100',
+  Offline: {
+    label: 'Offline',
+    color: 'bg-red-500',
   },
-  error: {
+  Standby: {
+    label: 'Standby',
+    color: 'bg-yellow-500',
+  },
+  Error: {
     label: 'Error',
-    icon: TriangleAlert,
-    badgeClass: 'bg-red-100 text-red-800 border-red-200 hover:bg-red-100',
+    color: 'bg-red-500',
   },
 };
 
 const initialMockDevices: Device[] = [
-    { id: 'XL-200', name: 'Roche Cobas XL-200', type: 'Chemistry Analyzer', status: 'connected', lastCommunication: new Date(Date.now() - 2 * 60 * 1000).toLocaleString() },
-    { id: 'I-800', name: 'Immunoassay System I-800', type: 'Immunoassay Analyzer', status: 'disconnected', lastCommunication: new Date(Date.now() - 60 * 60 * 1000).toLocaleString() },
-    { id: 'CBC-5D', name: 'Sysmex CBC-5D', type: 'Hematology Analyzer', status: 'error', lastCommunication: new Date(Date.now() - 24 * 60 * 60 * 1000).toLocaleString() },
+    { id: 'DEV-001', name: 'Chemistry Analyzer', model: 'Cobas c311', connectionType: 'TCP/IP Bi-directional', status: 'Online', lastSync: new Date().toISOString(), serialNumber: '1234367890', firmwareVersion: '1:4 2', logs: ["Connected successfully"], mapping: [{itemCode: 'GLU', glul: 'GLU'}, {itemCode: 'CHOL', glul: 'CHOL'}]},
+    { id: 'DEV-002', name: 'Hematology Analyzer', model: 'Sysmex XN', connectionType: 'Serial Uni-directional', status: 'Offline', lastSync: new Date(Date.now() - 3600 * 1000).toISOString(), serialNumber: 'SN-SYS-002', firmwareVersion: '2.1.0', logs: ["Connection lost"], mapping: [{itemCode: 'WBC', glul: 'WBC'}, {itemCode: 'RBC', glul: 'RBC'}] },
+    { id: 'DEV-003', name: 'Coagulation Analyzer', model: 'ACL Elite', connectionType: 'TCP/IP Uni-directional', status: 'Online', lastSync: new Date(Date.now() - 120 * 1000).toISOString(), serialNumber: 'SN-ACL-003', firmwareVersion: '3.5.1', logs: ["Ready"], mapping: [{itemCode: 'PT', glul: 'PT'}, {itemCode: 'APTT', glul: 'APTT'}] },
+    { id: 'DEV-004', name: 'Immunoassay Analyzer', model: 'Abbott Architect', connectionType: 'Serial Uni-directional', status: 'Standby', lastSync: new Date(Date.now() - 1800 * 1000).toISOString(), serialNumber: 'SN-ABB-004', firmwareVersion: '1.9.8', logs: ["Idle"], mapping: [{itemCode: 'TSH', glul: 'TSH'}, {itemCode: 'FT4', glul: 'FT4'}] },
+    { id: 'DEV-005', name: 'Urine Analyzer', model: 'DIRUI UF-50', connectionType: 'TCP/IP Bi-directional', status: 'Offline', lastSync: new Date(Date.now() - 86400 * 1000).toISOString(), serialNumber: 'SN-DIR-005', firmwareVersion: '1.2.3', logs: ["Device powered off"], mapping: [{itemCode: 'LEU', glul: 'LEU'}, {itemCode: 'URO', glul: 'URO'}] },
 ];
 
+function StatCard({ icon: Icon, title, value, isLoading }: { icon: LucideIcon; title: string; value: string | number; isLoading: boolean}) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <Icon className="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        {isLoading ? <Skeleton className="h-8 w-12" /> : <div className="text-2xl font-bold">{value}</div>}
+      </CardContent>
+    </Card>
+  )
+}
 
 export default function DevicesPage() {
   const { toast } = useToast();
   const [devices, setDevices] = React.useState<Device[]>([]);
+  const [selectedDevice, setSelectedDevice] = React.useState<Device | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
-  const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 
-  const fetchDevices = React.useCallback(async () => {
-    if (!isRefreshing) setIsLoading(true);
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 800)); 
-    setDevices(initialMockDevices);
-    setIsLoading(false);
-    setIsRefreshing(false);
-  }, [isRefreshing]);
-  
-
   React.useEffect(() => {
-    fetchDevices();
-  }, [fetchDevices]);
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await fetchDevices();
-    toast({ title: "Success", description: "Device list refreshed." });
-  };
+    // Simulate network delay
+    setTimeout(() => {
+        setDevices(initialMockDevices);
+        setSelectedDevice(initialMockDevices[0]);
+        setIsLoading(false);
+    }, 800)
+  }, []);
 
   const handleAddDevice = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const newDevice: Device = {
-      id: formData.get('id') as string, 
+      id: formData.get('id') as string,
       name: formData.get('name') as string,
-      type: formData.get('type') as string,
-      status: 'disconnected', // Default status for new devices
-      lastCommunication: new Date().toLocaleString(),
+      model: formData.get('model') as string,
+      connectionType: formData.get('connectionType') as string,
+      status: 'Offline', // Default status for new devices
+      lastSync: new Date().toISOString(),
+      serialNumber: 'N/A',
+      firmwareVersion: 'N/A',
+      logs: ['Device added'],
+      mapping: [],
     };
     
-    // Simulate adding to local state
     setDevices(currentDevices => [newDevice, ...currentDevices]);
-    
-    toast({ title: "Success (Simulation)", description: "Device added to local list." });
+    toast({ title: "Success", description: "Device added to local list." });
     setIsDialogOpen(false); // Close dialog
   };
+  
+  const onlineCount = devices.filter(d => d.status === 'Online').length;
+  const offlineCount = devices.filter(d => d.status === 'Offline' || d.status === 'Standby').length;
 
 
   return (
     <MainLayout>
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Devices</CardTitle>
-              <CardDescription>Manage and monitor your lab devices.</CardDescription>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Content Column */}
+        <div className="lg:col-span-2 flex flex-col gap-6">
+            <div className="grid gap-4 md:grid-cols-4">
+              <StatCard title="Total Devices" value={devices.length} icon={Server} isLoading={isLoading}/>
+              <StatCard title="Online" value={onlineCount} icon={Power} isLoading={isLoading}/>
+              <StatCard title="Offline" value={offlineCount} icon={PowerOff} isLoading={isLoading}/>
+              <StatCard title="Last Sync" value={isLoading ? '...' : new Date().toLocaleTimeString()} icon={Clock} isLoading={isLoading}/>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing || isLoading}>
-                <RefreshCw className={cn("mr-2 h-4 w-4", (isRefreshing) && "animate-spin")} />
-                Refresh
-              </Button>
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button><PlusCircle className="mr-2 h-4 w-4" /> Add Device</Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add New Device</DialogTitle>
-                    <DialogDescription>
-                      Enter the details of the new device to add it to the system.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <form onSubmit={handleAddDevice}>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="id" className="text-right">Device ID</Label>
-                        <Input id="id" name="id" className="col-span-3" required/>
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="name" className="text-right">Name</Label>
-                        <Input id="name" name="name" className="col-span-3" required/>
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="type" className="text-right">Type</Label>
-                        <Input id="type" name="type" className="col-span-3" required/>
-                      </div>
+          
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                         <div className="flex items-center gap-4">
+                             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                                <DialogTrigger asChild>
+                                  <Button><PlusCircle className="mr-2 h-4 w-4" /> Add Device</Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Add New Device</DialogTitle>
+                                    <DialogDescription>
+                                      Enter the details of the new device to add it to the system.
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  <form onSubmit={handleAddDevice}>
+                                    <div className="grid gap-4 py-4">
+                                      <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="id" className="text-right">Device ID</Label>
+                                        <Input id="id" name="id" className="col-span-3" required/>
+                                      </div>
+                                      <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="name" className="text-right">Name</Label>
+                                        <Input id="name" name="name" className="col-span-3" required/>
+                                      </div>
+                                      <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="model" className="text-right">Model</Label>
+                                        <Input id="model" name="model" className="col-span-3" required/>
+                                      </div>
+                                       <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="connectionType" className="text-right">Connection</Label>
+                                        <Input id="connectionType" name="connectionType" className="col-span-3" required/>
+                                      </div>
+                                    </div>
+                                    <DialogFooter>
+                                      <Button type="submit">Save Device</Button>
+                                    </DialogFooter>
+                                  </form>
+                                </DialogContent>
+                              </Dialog>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input placeholder="Search devices..." className="pl-10 w-full sm:w-64" />
+                            </div>
+                        </div>
                     </div>
-                    <DialogFooter>
-                      <Button type="submit">Save Device</Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Device ID</TableHead>
-                <TableHead>Device Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Last Communication</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                Array.from({ length: 3 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-48" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-28 rounded-full" /></TableCell>
-                    <TableCell className="text-right"><Skeleton className="h-4 w-36 ml-auto" /></TableCell>
-                  </TableRow>
-                ))
-              ) : devices.map((device) => {
-                const config = statusConfig[device.status];
-                const Icon = config.icon;
-                return (
-                  <TableRow key={device.id}>
-                    <TableCell className="font-mono text-xs">{device.id}</TableCell>
-                    <TableCell className="font-medium">{device.name}</TableCell>
-                    <TableCell>{device.type}</TableCell>
-                    <TableCell>
-                       <Badge variant="outline" className={cn('text-xs font-semibold border-2', config.badgeClass)}>
-                          <Icon className="mr-1 h-3 w-3" />
-                          {config.label}
-                        </Badge>
-                    </TableCell>
-                    <TableCell className="text-right text-muted-foreground">{device.lastCommunication}</TableCell>
-                  </TableRow>
-                )
-              })}
-              {!isLoading && devices.length === 0 && (
-                <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center">
-                        No devices found. Add a device to get started.
-                    </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                </CardHeader>
+                <CardContent>
+                   <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Device ID</TableHead>
+                        <TableHead>Device Name</TableHead>
+                        <TableHead>Model</TableHead>
+                        <TableHead>Connection Type</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {isLoading ? (
+                        Array.from({ length: 5 }).map((_, i) => (
+                          <TableRow key={i}>
+                            <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                            <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                            <TableCell><Skeleton className="h-4 w-36" /></TableCell>
+                            <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                          </TableRow>
+                        ))
+                      ) : devices.map((device) => {
+                        const config = statusConfig[device.status];
+                        return (
+                          <TableRow key={device.id} onClick={() => setSelectedDevice(device)} className={cn("cursor-pointer", selectedDevice?.id === device.id && "bg-muted")}>
+                            <TableCell className="font-mono text-xs">{device.id}</TableCell>
+                            <TableCell className="font-medium">{device.name}</TableCell>
+                            <TableCell>{device.model}</TableCell>
+                            <TableCell>{device.connectionType}</TableCell>
+                            <TableCell>
+                               <div className="flex items-center gap-2">
+                                  <span className={cn("h-2.5 w-2.5 rounded-full", config.color)}></span>
+                                  <span className="text-sm">{config.label}</span>
+                               </div>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                      {!isLoading && devices.length === 0 && (
+                        <TableRow>
+                            <TableCell colSpan={5} className="h-24 text-center">
+                                No devices found. Add a device to get started.
+                            </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+            </Card>
+        </div>
+
+        {/* Details Column */}
+        <div className="lg:col-span-1">
+            <Card className="sticky top-20">
+                 <CardHeader>
+                    <CardTitle>Device Details</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {isLoading || !selectedDevice ? (
+                        <div className="space-y-6">
+                            <div>
+                                <Skeleton className="h-5 w-24 mb-4" />
+                                <div className="space-y-2">
+                                    <Skeleton className="h-4 w-full" />
+                                    <Skeleton className="h-4 w-4/5" />
+                                    <Skeleton className="h-4 w-full" />
+                                    <Skeleton className="h-4 w-3/4" />
+                                </div>
+                            </div>
+                             <div>
+                                <Skeleton className="h-5 w-20 mb-4" />
+                                <div className="space-y-2">
+                                    <Skeleton className="h-4 w-full" />
+                                    <Skeleton className="h-4 w-full" />
+                                </div>
+                            </div>
+                             <div>
+                                <Skeleton className="h-5 w-16 mb-4" />
+                                <Skeleton className="h-4 w-4/5" />
+                            </div>
+                        </div>
+                    ) : (
+                       <div className="space-y-6 text-sm">
+                            <div>
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                                    <div className="font-semibold text-muted-foreground">Device Name</div>
+                                    <div className="text-right">{selectedDevice.name}</div>
+                                    <div className="font-semibold text-muted-foreground">Model</div>
+                                    <div className="text-right">{selectedDevice.model}</div>
+                                    <div className="font-semibold text-muted-foreground">Serial Number</div>
+                                    <div className="text-right">{selectedDevice.serialNumber}</div>
+                                    <div className="font-semibold text-muted-foreground">Firmware Version</div>
+                                    <div className="text-right">{selectedDevice.firmwareVersion}</div>
+                                    <div className="font-semibold text-muted-foreground">Connection</div>
+                                    <div className="text-right">{selectedDevice.connectionType}</div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 className="font-semibold mb-2">Mapping</h4>
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                                    {selectedDevice.mapping.map(m => (
+                                        <React.Fragment key={m.itemCode}>
+                                            <div className="text-muted-foreground">{m.itemCode}</div>
+                                            <div className="text-right font-mono text-xs">{m.glul}</div>
+                                        </React.Fragment>
+                                    ))}
+                                </div>
+                            </div>
+
+                             <div>
+                                <h4 className="font-semibold mb-2">Logs</h4>
+                                <div className="flex items-center gap-2 text-muted-foreground">
+                                   <span className={cn("h-2.5 w-2.5 rounded-full", statusConfig[selectedDevice.status].color)}></span>
+                                   <span>{selectedDevice.logs[0]}</span>
+                                </div>
+                            </div>
+                       </div>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+
+      </div>
     </MainLayout>
   );
 }
