@@ -54,7 +54,8 @@ const systemModules: Module[] = [
         id: 'offline',
         title: 'Online/Offline Capability',
         description: 'System automatically saves data locally when offline and syncs when reconnected. No setup required.',
-        icon: CloudCog
+        icon: CloudCog,
+        href: '/settings/online-offline'
     },
     {
         id: 'instrument-comm',
@@ -81,7 +82,8 @@ const systemModules: Module[] = [
         id: 'logging',
         title: 'Logging & Monitoring',
         description: 'Status koneksi, error, riwayat',
-        icon: AlertCircle
+        icon: AlertCircle,
+        href: '/logs'
     },
     {
         id: 'alerts',
