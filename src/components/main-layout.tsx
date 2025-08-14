@@ -86,11 +86,11 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       <Sidebar side="left" collapsible="icon" className="border-r-0 bg-gradient-to-b from-[hsl(var(--sidebar-background))] to-[hsl(var(--sidebar-background-end))] text-sidebar-foreground">
         <SidebarHeader>
            <div className="flex h-14 items-center justify-start gap-3 p-4 group-data-[collapsible=icon]:hidden">
-            <Image src="/logo.png" alt="App Logo" width={28} height={28} className="h-7 w-7" />
+            <Image src="/images/logo.png" alt="App Logo" width={28} height={28} className="h-7 w-7" />
             <span className="text-lg font-bold text-white">Middleware LIS</span>
           </div>
            <div className="hidden h-14 items-center justify-center p-2 group-data-[collapsible=icon]:flex">
-            <Image src="/logo.png" alt="App Logo" width={28} height={28} className="h-7 w-7" />
+            <Image src="/images/logo.png" alt="App Logo" width={28} height={28} className="h-7 w-7" />
           </div>
         </SidebarHeader>
         <SidebarContent className="p-2">
