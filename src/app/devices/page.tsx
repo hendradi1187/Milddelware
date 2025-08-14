@@ -7,11 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Wifi, WifiOff, TriangleAlert, type LucideIcon, PlusCircle, Search, Clock, Server, Power, PowerOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AddDeviceWizard } from '@/components/devices/add-device-wizard';
 
 type DeviceStatus = 'Online' | 'Offline' | 'Standby' | 'Error';
 
@@ -80,7 +78,6 @@ export default function DevicesPage() {
   const [devices, setDevices] = React.useState<Device[]>([]);
   const [selectedDevice, setSelectedDevice] = React.useState<Device | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 
   React.useEffect(() => {
     // Simulate network delay
@@ -91,25 +88,17 @@ export default function DevicesPage() {
     }, 800)
   }, []);
 
-  const handleAddDevice = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+  const handleAddDevice = (newDeviceData: Omit<Device, 'status' | 'lastSync' | 'logs' | 'mapping'>) => {
     const newDevice: Device = {
-      id: formData.get('id') as string,
-      name: formData.get('name') as string,
-      model: formData.get('model') as string,
-      connectionType: formData.get('connectionType') as string,
-      status: 'Offline', // Default status for new devices
-      lastSync: new Date().toISOString(),
-      serialNumber: 'N/A',
-      firmwareVersion: 'N/A',
-      logs: ['Device added'],
-      mapping: [],
+        ...newDeviceData,
+        status: 'Offline', // Default status for new devices
+        lastSync: new Date().toISOString(),
+        logs: ['Device added'],
+        mapping: [],
     };
     
     setDevices(currentDevices => [newDevice, ...currentDevices]);
     toast({ title: "Success", description: "Device added to local list." });
-    setIsDialogOpen(false); // Close dialog
   };
   
   const onlineCount = devices.filter(d => d.status === 'Online').length;
@@ -132,42 +121,7 @@ export default function DevicesPage() {
                 <CardHeader>
                     <div className="flex items-center justify-between">
                          <div className="flex items-center gap-4">
-                             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                                <DialogTrigger asChild>
-                                  <Button><PlusCircle className="mr-2 h-4 w-4" /> Add Device</Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                  <DialogHeader>
-                                    <DialogTitle>Add New Device</DialogTitle>
-                                    <DialogDescription>
-                                      Enter the details of the new device to add it to the system.
-                                    </DialogDescription>
-                                  </DialogHeader>
-                                  <form onSubmit={handleAddDevice}>
-                                    <div className="grid gap-4 py-4">
-                                      <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="id" className="text-right">Device ID</Label>
-                                        <Input id="id" name="id" className="col-span-3" required/>
-                                      </div>
-                                      <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="name" className="text-right">Name</Label>
-                                        <Input id="name" name="name" className="col-span-3" required/>
-                                      </div>
-                                      <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="model" className="text-right">Model</Label>
-                                        <Input id="model" name="model" className="col-span-3" required/>
-                                      </div>
-                                       <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="connectionType" className="text-right">Connection</Label>
-                                        <Input id="connectionType" name="connectionType" className="col-span-3" required/>
-                                      </div>
-                                    </div>
-                                    <DialogFooter>
-                                      <Button type="submit">Save Device</Button>
-                                    </DialogFooter>
-                                  </form>
-                                </DialogContent>
-                              </Dialog>
+                            <AddDeviceWizard onSave={handleAddDevice} />
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input placeholder="Search devices..." className="pl-10 w-full sm:w-64" />
