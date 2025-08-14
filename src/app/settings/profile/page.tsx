@@ -13,8 +13,9 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { updateProfile } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, storage } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -22,6 +23,7 @@ export default function ProfilePage() {
   const [name, setName] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [avatarPreview, setAvatarPreview] = React.useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = React.useState<File | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [isSaving, setIsSaving] = React.useState(false);
 
@@ -29,7 +31,7 @@ export default function ProfilePage() {
     if (user) {
         setName(user.displayName || '');
         setEmail(user.email || '');
-        setAvatarPreview(user.photoURL || '/images/default-avatar.png');
+        setAvatarPreview(user.photoURL);
     }
   }, [user]);
 
@@ -40,6 +42,7 @@ export default function ProfilePage() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
+      setAvatarFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setAvatarPreview(reader.result as string);
@@ -49,13 +52,23 @@ export default function ProfilePage() {
   };
   
   const handleSaveChanges = async () => {
-    if (!user) return;
+    if (!user || !auth.currentUser) return;
     setIsSaving(true);
+    
     try {
-        await updateProfile(auth.currentUser!, {
+        let photoURL = user.photoURL;
+
+        if (avatarFile) {
+            const storageRef = ref(storage, `profile-pictures/${user.uid}`);
+            const snapshot = await uploadBytes(storageRef, avatarFile);
+            photoURL = await getDownloadURL(snapshot.ref);
+        }
+
+        await updateProfile(auth.currentUser, {
             displayName: name,
-            // photoURL will be handled differently, as it requires file upload to storage
+            photoURL: photoURL,
         });
+
         toast({
             title: 'Profile Updated',
             description: 'Your changes have been successfully saved.',
@@ -69,6 +82,7 @@ export default function ProfilePage() {
         });
     } finally {
         setIsSaving(false);
+        setAvatarFile(null); // Reset file input after saving
     }
   };
   
@@ -122,9 +136,9 @@ export default function ProfilePage() {
                     <CardContent>
                          <Alert>
                             <Info className="h-4 w-4" />
-                            <AlertTitle>Image Upload Simulation</AlertTitle>
+                            <AlertTitle>Image Upload Enabled</AlertTitle>
                             <AlertDescription>
-                                You can preview a new profile picture. To save it permanently, you must manually add the image to the `public/images` folder and update the user's data.
+                                You can now upload a new profile picture. It will be saved to Firebase Storage.
                             </AlertDescription>
                         </Alert>
                     </CardContent>
