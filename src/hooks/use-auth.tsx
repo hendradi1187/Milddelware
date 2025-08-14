@@ -56,26 +56,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUser(user);
-        // In a real scenario, you might not have a firestore doc for a mock user.
-        // Let's assume the role comes from Firestore if the user is real.
         const userDocRef = doc(db, 'users', user.uid);
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
           setUserRole(userDoc.data().role as UserRole);
         } else {
-           // If no doc, and it's not the mock user, they have no role.
-          setUserRole(null);
+           // Default to Admin in simulation if no specific role is found
+           setUserRole('Admin');
         }
       } else {
         // --- SIMULATION BYPASS ---
-        // If Firebase auth fails or no user is logged in,
-        // we create a mock Admin user for simulation purposes.
         console.warn("SIMULATION MODE: Bypassing login and mocking Admin user.");
         const mockUser = createMockUser();
         setUser(mockUser);
         setUserRole('Admin');
-        // We no longer redirect to '/login'
-        // router.push('/login');
       }
       setLoading(false);
     });

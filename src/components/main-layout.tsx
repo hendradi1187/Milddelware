@@ -23,12 +23,14 @@ import {
   ClipboardCheck,
   LogOut,
   Cloud,
+  ShieldCheck,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
+import { Badge } from './ui/badge';
 
 const allMenuItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard, roles: ['Admin', 'Technician', 'QA'] },
@@ -144,8 +146,9 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                         <DropdownMenuLabel>
                             <div className="flex flex-col space-y-1">
                                 <p className="text-sm font-medium leading-none">{user.displayName ?? user.email}</p>
-                                <p className="text-xs leading-none text-muted-foreground">
-                                {userRole}
+                                <p className="text-xs leading-none text-muted-foreground flex items-center gap-1.5 pt-1">
+                                    {userRole === 'Admin' && <ShieldCheck className="w-3.5 h-3.5 text-primary" />}
+                                    {userRole}
                                 </p>
                             </div>
                         </DropdownMenuLabel>
