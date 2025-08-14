@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { MainLayout } from '@/components/main-layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Wifi, FileClock, AlertCircle, CheckCircle, HelpCircle, AlertTriangle } from 'lucide-react';
+import { Wifi, FileClock, AlertCircle, CheckCircle, HelpCircle, AlertTriangle, SlidersHorizontal } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 
 const dataProcessingData = [
@@ -172,19 +172,34 @@ export default function DashboardPage() {
                 </Card>
             </div>
             
-            <Card>
-                <CardHeader>
-                    <CardTitle>Business Logic Layer</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-sm text-muted-foreground">
-                        This section can be used to display information about the business logic layer, such as active rules, processing pipelines, or other relevant metrics.
-                    </p>
-                </CardContent>
+             <Card className="hover:shadow-lg transition-shadow duration-300">
+                <Link href="/settings/business-logic">
+                    <CardHeader className="flex flex-row items-center gap-4">
+                        <SlidersHorizontal className="h-6 w-6 text-primary" />
+                        <div>
+                            <CardTitle>Business Logic Layer</CardTitle>
+                            <CardDescription>Automate result validation, flagging, and handling with custom rules.</CardDescription>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-sm text-muted-foreground grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-2">
+                           <div>
+                                <p className="font-semibold text-card-foreground">3 Active Rules</p>
+                                <p>Checking for critical values and test ranges.</p>
+                           </div>
+                           <div>
+                                <p className="font-semibold text-card-foreground">12 Results Flagged Today</p>
+                                <p>Results automatically flagged for review.</p>
+                           </div>
+                           <div>
+                                <p className="font-semibold text-card-foreground">0 Rejections</p>
+                                <p>No results have been auto-rejected.</p>
+                           </div>
+                        </div>
+                    </CardContent>
+                </Link>
             </Card>
         </div>
     </MainLayout>
   );
 }
-
-    

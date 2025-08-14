@@ -1,3 +1,4 @@
+
 'use client';
 import React from 'react';
 import { MainLayout } from '@/components/main-layout';
@@ -73,7 +74,7 @@ const systemModules: Module[] = [
     {
         id: 'business-logic',
         title: 'Business Logic Layer',
-        description: 'Rules and decision-making processes',
+        description: 'Define custom rules for result validation and flagging.',
         icon: SlidersHorizontal,
         href: '/settings/business-logic'
     },
