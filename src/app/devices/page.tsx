@@ -47,6 +47,10 @@ export default function DevicesPage() {
   const [isConnected, setIsConnected] = React.useState(false);
   const [connectionStatus, setConnectionStatus] = React.useState('');
   
+  // State for Connection
+  const [ipAddress, setIpAddress] = React.useState('127.0.0.1');
+  const [port, setPort] = React.useState('5005');
+
   // State for Mappings
   const [mappings, setMappings] = React.useState<MappingRow[]>(initialMappingData);
   const [editingMappingId, setEditingMappingId] = React.useState<number | null>(null);
@@ -62,7 +66,7 @@ export default function DevicesPage() {
     setIsConnecting(true);
     setIsConnected(false);
     try {
-        const response = await testConnection({ ip: '127.0.0.1', port: '5005' });
+        const response = await testConnection({ ip: ipAddress, port: port });
         setConnectionStatus(response.message);
         setIsConnected(response.success);
          toast({
@@ -88,7 +92,7 @@ export default function DevicesPage() {
   const handleTestConnection = async () => {
     setIsTesting(true);
     try {
-        const response = await testConnection({ ip: '127.0.0.1', port: '5005' });
+        const response = await testConnection({ ip: ipAddress, port: port });
         toast({
             title: "Connection Test Result",
             description: response.message,
@@ -200,11 +204,11 @@ export default function DevicesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="ip-address">IP Address</Label>
-                  <Input id="ip-address" defaultValue="127.0.0.1" />
+                  <Input id="ip-address" value={ipAddress} onChange={(e) => setIpAddress(e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="port">Port</Label>
-                  <Input id="port" defaultValue="5005" />
+                  <Input id="port" value={port} onChange={(e) => setPort(e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="timeout">Timeout (ms)</Label>
@@ -370,3 +374,5 @@ export default function DevicesPage() {
     </MainLayout>
   );
 }
+
+    
