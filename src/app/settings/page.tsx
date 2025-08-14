@@ -71,7 +71,8 @@ const systemModules: Module[] = [
         id: 'lis-comm',
         title: 'Komunikasi LIS & SATUSEHAT',
         description: 'Mudah integrasi SPI',
-        icon: ArrowRightLeft
+        icon: ArrowRightLeft,
+        href: '/settings/lis-communication'
     },
     {
         id: 'logging',
