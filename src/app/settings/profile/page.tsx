@@ -140,39 +140,38 @@ export default function ProfilePage() {
                             <AlertDescription>
                                 You can now upload a new profile picture. It will be saved to Firebase Storage.
                             </AlertDescription>
-                        </Alert>
+                         </Alert>
                     </CardContent>
                 </Card>
             </div>
             <div className="md:col-span-2">
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>Account Details</CardTitle>
-                        <CardDescription>Update your personal information.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="name">Full Name</Label>
-                            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Email Address</Label>
-                            <Input id="email" type="email" value={email} disabled />
-                             <p className="text-xs text-muted-foreground px-1">Email address cannot be changed.</p>
-                        </div>
-                         <div className="space-y-2">
-                            <Label htmlFor="role">Role</Label>
-                            <Input id="role" value="Administrator" disabled />
-                        </div>
-                         <Button className="mt-4" onClick={handleSaveChanges} disabled={isSaving}>
-                            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4"/>}
-                            {isSaving ? 'Saving...' : 'Save Changes'}
-                        </Button>
-                    </CardContent>
-                </Card>
+                <form onSubmit={(e) => { e.preventDefault(); handleSaveChanges(); }}>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Profile Details</CardTitle>
+                            <CardDescription>Update your personal information here.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="name">Full Name</Label>
+                                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="email">Email</Label>
+                                <Input id="email" type="email" value={email} disabled />
+                                <p className="text-xs text-muted-foreground px-1">Email address cannot be changed.</p>
+                            </div>
+                        </CardContent>
+                        <CardContent>
+                            <Button type="submit" disabled={isSaving}>
+                                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                                {isSaving ? 'Saving...' : 'Save Changes'}
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </form>
             </div>
         </div>
-
     </MainLayout>
   );
 }
