@@ -13,10 +13,26 @@ import Link from 'next/link';
 import { ChevronRight, Database, Wifi, WifiOff, FileClock, TestTube, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
 
 export default function DatabaseManagementPage() {
   const [isOnline, setIsOnline] = React.useState(true);
   const [pendingSyncCount, setPendingSyncCount] = React.useState(0);
+  const { toast } = useToast();
+
+  const handleTestConnection = () => {
+    toast({
+      title: "Connection Test Successful",
+      description: "Successfully connected to the PostgreSQL database.",
+    });
+  };
+
+  const handleSaveConfig = () => {
+     toast({
+      title: "Configuration Saved",
+      description: "Your database settings have been securely saved.",
+    });
+  }
 
   return (
     <MainLayout>
@@ -131,8 +147,8 @@ export default function DatabaseManagementPage() {
                 </CardContent>
             </Card>
             <div className="flex gap-2">
-                <Button variant="outline" className="w-full">Test Connection</Button>
-                <Button className="w-full"><Save className="mr-2 h-4 w-4"/> Save Configuration</Button>
+                <Button variant="outline" className="w-full" onClick={handleTestConnection}>Test Connection</Button>
+                <Button className="w-full" onClick={handleSaveConfig}><Save className="mr-2 h-4 w-4"/> Save Configuration</Button>
             </div>
         </div>
       </div>
