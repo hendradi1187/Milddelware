@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -16,9 +17,9 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 
-type LabResultStatus = 'Pending' | 'Sent' | 'Failed' | 'QC';
+export type LabResultStatus = 'Pending' | 'Sent' | 'Failed' | 'QC';
 
-interface LabResult {
+export interface LabResult {
   patientId: string;
   name: string;
   testCode: string;
@@ -28,7 +29,7 @@ interface LabResult {
   status: LabResultStatus;
 }
 
-const mockResults: LabResult[] = [
+export const mockResults: LabResult[] = [
     { patientId: 'P001', name: 'John Doe', testCode: 'GLU', result: '105', unit: 'mg/dL', timestamp: '2023-10-27 10:30', status: 'Sent' },
     { patientId: 'P002', name: 'Jane Smith', testCode: 'CHOL', result: '190', unit: 'mg/dL', timestamp: '2023-10-27 10:32', status: 'Sent' },
     { patientId: 'QC-01', name: 'QC Level 1', testCode: 'HGB', result: '14.5', unit: 'g/dL', timestamp: '2023-10-27 10:35', status: 'QC' },
@@ -146,31 +147,30 @@ export function LabResultsTable({ statusFilter, searchQuery }: { statusFilter?: 
           </TableBody>
         </Table>
       </div>
-      {totalPages > 1 && (
-        <div className="flex items-center justify-end space-x-2">
-            <span className="text-sm text-muted-foreground">
-                Page {currentPage} of {totalPages}
-            </span>
-            <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-            >
-                <ChevronLeft className="h-4 w-4" />
-                <span className="sr-only">Previous</span>
-            </Button>
-            <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-            >
-                <span className="sr-only">Next</span>
-                <ChevronRight className="h-4 w-4" />
-            </Button>
-        </div>
-      )}
+
+       <div className="flex items-center justify-end space-x-2">
+         <span className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages}
+         </span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+        >
+          <ChevronLeft className="h-4 w-4" />
+          <span className="sr-only">Previous</span>
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+          disabled={currentPage === totalPages}
+        >
+          <ChevronRight className="h-4 w-4" />
+          <span className="sr-only">Next</span>
+        </Button>
+      </div>
     </div>
   );
 }

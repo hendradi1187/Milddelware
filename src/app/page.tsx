@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -8,34 +7,70 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { Wifi, FileClock, AlertCircle, CheckCircle, HelpCircle, AlertTriangle, SlidersHorizontal } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+import type { LabResult, LabResultStatus } from '@/components/dashboard/lab-results-table'; // Assuming types are exported
+import { mockResults } from '@/components/dashboard/lab-results-table'; // Assuming mock data is exported
 
-const dataProcessingData = [
-  { name: '00:00', successful: 12, pending: 5, failed: 2 },
-  { name: '01:00', successful: 19, pending: 7, failed: 1 },
-  { name: '02:00', successful: 25, pending: 3, failed: 3 },
-  { name: '03:00', successful: 32, pending: 8, failed: 0 },
-  { name: '04:00', successful: 28, pending: 5, failed: 2 },
-  { name: '05:00', successful: 35, pending: 6, failed: 1 },
-  { name: '06:00', successful: 42, pending: 4, failed: 0 },
-];
+// Function to process raw results into hourly stats
+const processDataForChart = (results: LabResult[]) => {
+    const hourlyStats: { [hour: string]: { successful: number; pending: number; failed: number } } = {};
+
+    results.forEach(result => {
+        try {
+            const hour = result.timestamp.substring(11, 13) + ':00';
+            if (!hourlyStats[hour]) {
+                hourlyStats[hour] = { successful: 0, pending: 0, failed: 0 };
+            }
+
+            switch (result.status) {
+                case 'Sent':
+                    hourlyStats[hour].successful++;
+                    break;
+                case 'Pending':
+                    hourlyStats[hour].pending++;
+                    break;
+                case 'Failed':
+                    hourlyStats[hour].failed++;
+                    break;
+                // QC results are ignored for this chart
+            }
+        } catch (e) {
+            console.error("Error processing timestamp for result:", result, e);
+        }
+    });
+    
+    // Convert to chart-compatible format and sort by hour
+    return Object.entries(hourlyStats)
+        .map(([name, data]) => ({ name, ...data }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+};
+
 
 export default function DashboardPage() {
   const [loading, setLoading] = React.useState(true);
   const [stats, setStats] = React.useState({
-    connectedDevices: 0,
+    connectedDevices: 1, // This remains static for now
     pendingResults: 0,
     failedDispatches: 0,
   });
+  const [chartData, setChartData] = React.useState<any[]>([]);
 
   React.useEffect(() => {
-    setTimeout(() => {
-      setStats({
-        connectedDevices: 1,
-        pendingResults: 1,
-        failedDispatches: 1,
-      });
-      setLoading(false);
-    }, 1000);
+    // In a real app, you'd fetch this data. Here we use the mock.
+    const results: LabResult[] = mockResults;
+
+    const pendingCount = results.filter(r => r.status === 'Pending').length;
+    const failedCount = results.filter(r => r.status === 'Failed').length;
+    
+    setStats(prev => ({
+        ...prev,
+        pendingResults: pendingCount,
+        failedDispatches: failedCount,
+    }));
+
+    const processedChartData = processDataForChart(results);
+    setChartData(processedChartData);
+
+    setLoading(false);
   }, []);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -152,21 +187,23 @@ export default function DashboardPage() {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Data Processing</CardTitle>
+                        <CardTitle>Data Processing (Last 24 Hours)</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="h-[300px] w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={dataProcessingData} margin={{ top: 5, right: 20, left: -10, bottom: 20 }}>
-                                    <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false}/>
-                                    <Tooltip content={<CustomTooltip />} />
-                                    <Legend wrapperStyle={{paddingTop: 20}} content={renderLegend}/>
-                                    <Line type="monotone" dataKey="successful" name="Successful" stroke="#28A745" strokeWidth={2} dot={false} />
-                                    <Line type="monotone" dataKey="pending" name="Pending" stroke="#FFC107" strokeWidth={2} dot={false} />
-                                    <Line type="monotone" dataKey="failed" name="Failed" stroke="#DC3545" strokeWidth={2} dot={false} />
-                                </LineChart>
-                            </ResponsiveContainer>
+                           {loading ? <Skeleton className="w-full h-full" /> : (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <LineChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 20 }}>
+                                        <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                                        <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
+                                        <Tooltip content={<CustomTooltip />} />
+                                        <Legend wrapperStyle={{paddingTop: 20}} content={renderLegend}/>
+                                        <Line type="monotone" dataKey="successful" name="Successful" stroke="var(--chart-1)" strokeWidth={2} dot={false} />
+                                        <Line type="monotone" dataKey="pending" name="Pending" stroke="var(--chart-2)" strokeWidth={2} dot={false} />
+                                        <Line type="monotone" dataKey="failed" name="Failed" stroke="var(--chart-3)" strokeWidth={2} dot={false} />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                           )}
                         </div>
                     </CardContent>
                 </Card>
