@@ -58,7 +58,8 @@ const systemModules: Module[] = [
         id: 'instrument-comm',
         title: 'Komunikasi Instrumen',
         description: 'Mudah integrasi TCP/IP ticom',
-        icon: Network
+        icon: Network,
+        href: '/settings/instrument-communication'
     },
     {
         id: 'business-logic',
