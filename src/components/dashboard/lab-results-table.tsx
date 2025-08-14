@@ -48,14 +48,14 @@ const mockResults: LabResult[] = [
 
 const statusBadgeConfig: Record<LabResultStatus, string> = {
     Sent: 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100',
-    Pending: 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100',
+    Pending: 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100 animate-pulse',
     Failed: 'bg-red-100 text-red-800 border-red-200 hover:bg-red-100',
     QC: 'bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-100',
 };
 
-const RESULTS_PER_PAGE = 25;
+const RESULTS_PER_PAGE = 10;
 
-export function LabResultsTable({ statusFilter, searchQuery }: { statusFilter: string, searchQuery: string }) {
+export function LabResultsTable({ statusFilter, searchQuery }: { statusFilter?: string, searchQuery?: string }) {
   const searchParams = useSearchParams();
   const initialStatus = searchParams.get('status') as LabResultStatus | null;
   
@@ -74,7 +74,7 @@ export function LabResultsTable({ statusFilter, searchQuery }: { statusFilter: s
 
   const filteredResults = React.useMemo(() => {
     let filtered = results;
-    const currentStatusFilter = initialStatus || statusFilter;
+    const currentStatusFilter = statusFilter || initialStatus;
 
     if (currentStatusFilter && currentStatusFilter !== 'All') {
       filtered = filtered.filter(result => result.status === currentStatusFilter);

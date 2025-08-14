@@ -60,7 +60,8 @@ export default function DevicesPage() {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 
   const fetchDevices = React.useCallback(async () => {
-    setIsLoading(true);
+    // Forcing loading state for refresh effect
+    if (!isRefreshing) setIsLoading(true);
     try {
       const querySnapshot = await getDocs(collection(db, 'devices'));
       const devicesData = querySnapshot.docs.map(doc => {
@@ -83,8 +84,9 @@ export default function DevicesPage() {
       toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch devices from Firestore.' });
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
-  }, [toast]);
+  }, [toast, isRefreshing]);
   
 
   React.useEffect(() => {
@@ -95,7 +97,6 @@ export default function DevicesPage() {
     setIsRefreshing(true);
     await fetchDevices();
     toast({ title: "Success", description: "Device list refreshed." });
-    setIsRefreshing(false);
   };
 
   const handleAddDevice = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -134,7 +135,7 @@ export default function DevicesPage() {
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing || isLoading}>
-                <RefreshCw className={cn("mr-2 h-4 w-4", (isRefreshing || isLoading) && "animate-spin")} />
+                <RefreshCw className={cn("mr-2 h-4 w-4", (isRefreshing) && "animate-spin")} />
                 Refresh
               </Button>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
