@@ -20,19 +20,6 @@ import { CheckCircle, PlusCircle, Save, Trash2, Edit, XCircle, Loader2, AlertTri
 import { useToast } from '@/hooks/use-toast';
 import { testConnection } from '@/ai/flows/instrument-flow';
 
-// Initial Data
-const initialMappingData = [
-  { id: 1, lisCode: 'GLU-LIS', middlewareCode: 'GLU', instrumentCode: 'GLUC' },
-  { id: 2, lisCode: 'HB-LIS', middlewareCode: 'HGB', instrumentCode: 'HGBM' },
-  { id: 3, lisCode: 'CHOL-LIS', middlewareCode: 'CHOL', instrumentCode: 'CHOL' },
-];
-
-const initialInstrumentLogsData = [
-    { id: 1, timestamp: '2023-10-28 10:15:29', direction: 'RX', source: '192.168.1.100:5000', data: 'MSH|^~\\&|...'},
-    { id: 2, timestamp: '2023-10-28 10:15:45', direction: 'TX', source: 'Middleware', data: 'ACK|...'},
-    { id: 3, timestamp: '2023-10-28 10:16:10', direction: 'RX', source: '192.168.1.100:5000', data: 'OBX|1|NM|...'},
-];
-
 interface MappingRow {
     id: number;
     lisCode: string;
@@ -43,7 +30,7 @@ interface MappingRow {
 interface LogRow {
     id: number;
     timestamp: string;
-    direction: string;
+    direction: 'SYS' | 'RX' | 'TX';
     source: string;
     data: string;
 }
@@ -56,18 +43,18 @@ export default function DevicesPage() {
   const [connectionStatus, setConnectionStatus] = React.useState('');
   
   // State for Connection
-  const [ipAddress, setIpAddress] = React.useState('192.168.1.35');
+  const [ipAddress, setIpAddress] = React.useState('127.0.0.1');
   const [port, setPort] = React.useState('5005');
 
-  // State for Mappings
-  const [mappings, setMappings] = React.useState<MappingRow[]>(initialMappingData);
+  // State for Mappings - Start with empty data
+  const [mappings, setMappings] = React.useState<MappingRow[]>([]);
   const [editingMappingId, setEditingMappingId] = React.useState<number | null>(null);
   const [lisCode, setLisCode] = React.useState('');
   const [middlewareCode, setMiddlewareCode] = React.useState('');
   const [instrumentCode, setInstrumentCode] = React.useState('');
   
-  // State for Logs
-  const [logs, setLogs] = React.useState<LogRow[]>(initialInstrumentLogsData);
+  // State for Logs - Start with empty data
+  const [logs, setLogs] = React.useState<LogRow[]>([]);
   const [logSearch, setLogSearch] = React.useState("");
 
   const addLogEntry = (message: string, source: string = 'Middleware', direction: 'SYS' | 'RX' | 'TX' = 'SYS') => {
@@ -82,7 +69,30 @@ export default function DevicesPage() {
           source: source,
           data: message
       };
+
       setLogs(prev => [newLog, ...prev]);
+
+      // --- New Realistic Logic ---
+      // If log is from instrument, check mapping
+      if (direction === 'RX') {
+          // Simulate extracting code from a raw HL7-like message
+          const instrumentCodeMatch = message.match(/\|([^|]+)\|$/);
+          if (instrumentCodeMatch && instrumentCodeMatch[1]) {
+              const receivedInstrumentCode = instrumentCodeMatch[1];
+              const mappingFound = mappings.some(m => m.instrumentCode === receivedInstrumentCode);
+              
+              const mappingLog: LogRow = {
+                  id: Date.now() + 1, // ensure unique key
+                  timestamp: timestamp,
+                  direction: 'SYS',
+                  source: 'Data Mapper',
+                  data: mappingFound 
+                      ? `Mapping found for code: ${receivedInstrumentCode}. Result can be processed.`
+                      : `MAPPING NOT FOUND for code: ${receivedInstrumentCode}. Result will be queued with errors.`
+              };
+              setLogs(prev => [mappingLog, ...prev]);
+          }
+      }
   };
 
   const handleConnect = async () => {
@@ -94,7 +104,7 @@ export default function DevicesPage() {
         const response = await testConnection({ ip: ipAddress, port: port });
         setConnectionStatus(response.message);
         setIsConnected(response.success);
-        addLogEntry(response.message, `${ipAddress}:${port}`, 'RX');
+        addLogEntry(response.message, 'Middleware', response.success ? 'SYS' : 'SYS');
          toast({
             title: response.success ? "Connection Established" : "Connection Failed",
             description: response.message,
@@ -105,7 +115,7 @@ export default function DevicesPage() {
         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
         setConnectionStatus(`An unexpected error occurred: ${errorMessage}`);
         setIsConnected(false);
-        addLogEntry(`Error: ${errorMessage}`, `${ipAddress}:${port}`, 'RX');
+        addLogEntry(`Error: ${errorMessage}`, 'Middleware', 'SYS');
         toast({
             title: "Connection Error",
             description: errorMessage,
@@ -125,18 +135,27 @@ export default function DevicesPage() {
         const response = await testConnection({ ip: ipAddress, port: port });
         setConnectionStatus(response.message);
         setIsConnected(response.success);
-        addLogEntry(response.message, `${ipAddress}:${port}`, 'RX');
+        addLogEntry(response.message, 'Middleware', 'SYS');
         toast({
             title: "Connection Test Result",
             description: response.message,
             variant: response.success ? "default" : "destructive",
         });
+
+        // Simulate receiving data if connection is successful
+        if (response.success) {
+            setTimeout(() => {
+                const simulatedInstrumentCode = "GLUC"; // Change this to test different codes
+                addLogEntry(`MSH|^~\\&|||LIS||${new Date().toISOString()}||ORU^R01|MSG00001|P|2.3.1|||||||${simulatedInstrumentCode}|`, `${ipAddress}:${port}`, 'RX');
+            }, 1000);
+        }
+
     } catch (error) {
          console.error(error);
          const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
          setConnectionStatus(`An unexpected error occurred: ${errorMessage}`);
          setIsConnected(false);
-         addLogEntry(`Test Error: ${errorMessage}`, `${ipAddress}:${port}`, 'RX');
+         addLogEntry(`Test Error: ${errorMessage}`, 'Middleware', 'SYS');
          toast({
             title: "Connection Test Failed",
             description: errorMessage,
