@@ -26,6 +26,8 @@ import {
   LogOut,
   ShieldCheck,
   User,
+  AlertCircle,
+  CheckCircle,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -42,6 +44,30 @@ const allMenuItems = [
   { href: '/qa', label: 'QA / QC', icon: ClipboardCheck, roles: ['Admin', 'QA'] },
   { href: '/logs', label: 'Logs', icon: FileText, roles: ['Admin', 'Technician'] },
   { href: '/settings', label: 'Settings', icon: Settings, roles: ['Admin'] },
+];
+
+const mockNotifications = [
+    {
+        id: 1,
+        type: 'error',
+        title: 'Device Disconnected',
+        description: 'Chemistry Analyzer XL-200 went offline.',
+        time: '5m ago'
+    },
+    {
+        id: 2,
+        type: 'success',
+        title: 'Batch Sent',
+        description: 'Batch #124 successfully sent to LIS.',
+        time: '1h ago'
+    },
+     {
+        id: 3,
+        type: 'warning',
+        title: 'Pending Results High',
+        description: 'Over 50 results are pending dispatch.',
+        time: '3h ago'
+    }
 ];
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
@@ -86,6 +112,14 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   }
 
   const pageTitle = getPageTitle();
+
+  const NotificationIcon = ({type}: {type: string}) => {
+    switch(type) {
+        case 'error': return <AlertCircle className="h-4 w-4 text-red-500 mt-1 flex-shrink-0" />;
+        case 'success': return <CheckCircle className="h-4 w-4 text-green-500 mt-1 flex-shrink-0" />;
+        default: return <Bell className="h-4 w-4 text-yellow-500 mt-1 flex-shrink-0" />;
+    }
+  }
 
   return (
     <SidebarProvider>
@@ -187,9 +221,44 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                     <h1 className="text-xl font-semibold">{pageTitle}</h1>
                 </div>
                  <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" aria-label="Notifications">
-                      <Bell className="h-5 w-5" />
-                    </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                             <Button variant="ghost" size="icon" aria-label="Notifications" className="relative">
+                                <Bell className="h-5 w-5" />
+                                {mockNotifications.length > 0 && (
+                                    <span className="absolute top-0 right-0 flex h-2 w-2">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                    </span>
+                                )}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-80 md:w-96">
+                            <DropdownMenuLabel className="flex justify-between items-center">
+                                <span>Notifications</span>
+                                <Badge variant="secondary">{mockNotifications.length} New</Badge>
+                            </DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <div className="max-h-80 overflow-y-auto">
+                                {mockNotifications.map(notif => (
+                                     <DropdownMenuItem key={notif.id} className="p-3 items-start cursor-pointer">
+                                        <NotificationIcon type={notif.type} />
+                                        <div className="ml-3">
+                                            <p className="font-semibold text-sm">{notif.title}</p>
+                                            <p className="text-xs text-muted-foreground">{notif.description}</p>
+                                            <p className="text-xs text-muted-foreground mt-1">{notif.time}</p>
+                                        </div>
+                                    </DropdownMenuItem>
+                                ))}
+                            </div>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem asChild className="justify-center py-2">
+                               <Link href="/logs">
+                                    View all logs
+                                </Link>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </header>
         )}
