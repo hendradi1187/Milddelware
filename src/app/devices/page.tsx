@@ -299,21 +299,19 @@ export default function DevicesPage() {
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleSaveOrUpdateMapping} className="space-y-4">
-                    <div className="grid grid-cols-1 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="lis-code">LIS Code</Label>
-                             <Input id="lis-code" placeholder="e.g., GLU-LIS" value={lisCode} onChange={e => setLisCode(e.target.value)} />
-                        </div>
-                         <div className="space-y-2">
-                            <Label htmlFor="middleware-code">Middleware Code</Label>
-                             <Input id="middleware-code" placeholder="e.g., GLU" value={middlewareCode} onChange={e => setMiddlewareCode(e.target.value)} />
-                        </div>
-                         <div className="space-y-2">
-                            <Label htmlFor="instrument-code">Instrument Code</Label>
-                            <Input id="instrument-code" placeholder="e.g., GLUC" value={instrumentCode} onChange={e => setInstrumentCode(e.target.value)} />
-                        </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="lis-code">LIS Code</Label>
+                         <Input id="lis-code" placeholder="e.g., GLU-LIS" value={lisCode} onChange={e => setLisCode(e.target.value)} />
                     </div>
-                    <div className="flex gap-2">
+                     <div className="space-y-2">
+                        <Label htmlFor="middleware-code">Middleware Code</Label>
+                         <Input id="middleware-code" placeholder="e.g., GLU" value={middlewareCode} onChange={e => setMiddlewareCode(e.target.value)} />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="instrument-code">Instrument Code</Label>
+                        <Input id="instrument-code" placeholder="e.g., GLUC" value={instrumentCode} onChange={e => setInstrumentCode(e.target.value)} />
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-2">
                         <Button type="submit" className="w-full">
                             {editingMappingId ? <Save className="mr-2 h-4 w-4" /> : <PlusCircle className="mr-2 h-4 w-4" />}
                             {editingMappingId ? 'Update Mapping' : 'Save New Mapping'}
