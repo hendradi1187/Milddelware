@@ -69,7 +69,8 @@ const testConnectionFlow = ai.defineFlow(
       // Since this runs in a serverless environment, connecting to 'localhost' 
       // refers to the server's localhost, not the user's. 
       // For local testing with tools like Hercules, the app and the tool 
-      // must be on the same machine, and you should use the machine's local network IP.
+      // must be on the same machine, and you should use the machine's local network IP
+      // or 127.0.0.1 if running the app locally with `npm run dev`.
       socket.connect(portNum, ip);
     });
   }
@@ -77,7 +78,13 @@ const testConnectionFlow = ai.defineFlow(
 
 
 export async function testConnection(
-  input: ConnectionTestInput
-): Promise<ConnectionTestOutput> {
+  input: ConnectionTest.ConnectionTestInput
+): Promise<ConnectionTest.ConnectionTestOutput> {
   return testConnectionFlow(input);
+}
+
+// Declaring the namespace for clarity when using these types in other files.
+export namespace ConnectionTest {
+  export type ConnectionTestInput = z.infer<typeof ConnectionTestInputSchema>;
+  export type ConnectionTestOutput = z.infer<typeof ConnectionTestOutputSchema>;
 }
