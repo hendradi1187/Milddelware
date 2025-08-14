@@ -151,7 +151,14 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                 </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 mb-2">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuLabel>
+                      <div className="flex flex-col space-y-1">
+                          <p className="text-sm font-medium leading-none">{user.displayName ?? user.email}</p>
+                          <p className="text-xs leading-none text-muted-foreground">
+                          {userRole}
+                          </p>
+                      </div>
+                  </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                      <Link href="/settings/profile">
