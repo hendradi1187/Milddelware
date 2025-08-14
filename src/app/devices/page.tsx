@@ -6,13 +6,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Wifi, WifiOff, TriangleAlert, type LucideIcon, PlusCircle, Search, Clock, Server, Power, PowerOff, ChevronRight } from 'lucide-react';
+import { Wifi, WifiOff, TriangleAlert, type LucideIcon, PlusCircle, Search, Clock, Server, Power, PowerOff, ChevronRight, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AddDeviceWizard } from '@/components/devices/add-device-wizard';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 type DeviceStatus = 'Online' | 'Offline' | 'Standby' | 'Error';
 
@@ -81,12 +91,16 @@ export default function DevicesPage() {
   const [devices, setDevices] = React.useState<Device[]>([]);
   const [selectedDevice, setSelectedDevice] = React.useState<Device | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [deviceToDelete, setDeviceToDelete] = React.useState<Device | null>(null);
+
 
   React.useEffect(() => {
     // Simulate network delay
     setTimeout(() => {
         setDevices(initialMockDevices);
-        setSelectedDevice(initialMockDevices[0]);
+        if (initialMockDevices.length > 0) {
+            setSelectedDevice(initialMockDevices[0]);
+        }
         setIsLoading(false);
     }, 800)
   }, []);
@@ -100,8 +114,30 @@ export default function DevicesPage() {
         mapping: [],
     };
     
-    setDevices(currentDevices => [newDevice, ...currentDevices]);
+    setDevices(currentDevices => {
+        const updatedDevices = [newDevice, ...currentDevices];
+        if (!selectedDevice) {
+            setSelectedDevice(newDevice);
+        }
+        return updatedDevices;
+    });
     toast({ title: "Success", description: `Device "${newDevice.name}" added successfully.` });
+  };
+  
+  const handleDeleteDevice = () => {
+    if (!deviceToDelete) return;
+
+    setDevices(currentDevices => {
+        const newDevices = currentDevices.filter(d => d.id !== deviceToDelete.id);
+        
+        if (selectedDevice?.id === deviceToDelete.id) {
+            setSelectedDevice(newDevices.length > 0 ? newDevices[0] : null);
+        }
+        return newDevices;
+    });
+    
+    toast({ title: "Device Deleted", description: `Device "${deviceToDelete.name}" has been removed.` });
+    setDeviceToDelete(null);
   };
   
   const onlineCount = devices.filter(d => d.status === 'Online').length;
@@ -259,13 +295,38 @@ export default function DevicesPage() {
                                    <span>{selectedDevice.logs[0]}</span>
                                 </div>
                             </div>
+                             <div className="border-t pt-4">
+                                <Button variant="destructive" className="w-full" onClick={() => setDeviceToDelete(selectedDevice)}>
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete Device
+                                </Button>
+                            </div>
                        </div>
                     )}
                 </CardContent>
             </Card>
         </div>
-
       </div>
+      
+       <AlertDialog open={!!deviceToDelete} onOpenChange={(open) => !open && setDeviceToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the device <span className="font-semibold">{deviceToDelete?.name}</span> from the system.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteDevice} className="bg-destructive hover:bg-destructive/90">
+              Yes, delete device
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </MainLayout>
   );
 }
+
+    
