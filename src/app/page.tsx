@@ -113,10 +113,10 @@ export default function DashboardPage() {
   return (
     <MainLayout>
         <div className="flex flex-col gap-6">
-            {/* Header */}
-            <div>
+            {/* Header Banner */}
+            <div className="rounded-lg bg-gradient-to-r from-emerald-400 to-green-500 p-6 text-white shadow-lg">
                 <h1 className="text-3xl font-bold">Middleware LIS</h1>
-                <p className="text-muted-foreground mt-1">for integrating laboratory instruments with SATUSEHAT</p>
+                <p className="text-white/90 mt-1">for integrating laboratory instruments with SATUSEHAT</p>
             </div>
 
             {/* Summary Cards */}
