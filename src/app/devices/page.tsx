@@ -16,8 +16,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CheckCircle, PlusCircle, Save, Trash2, Edit, XCircle } from 'lucide-react';
+import { CheckCircle, PlusCircle, Save, Trash2, Edit, XCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { testConnection } from '@/ai/flows/instrument-flow';
 
 // Initial Data
 const initialMappingData = [
@@ -41,6 +42,8 @@ interface MappingRow {
 
 export default function DevicesPage() {
   const { toast } = useToast();
+  const [isConnecting, setIsConnecting] = React.useState(false);
+  const [isTesting, setIsTesting] = React.useState(false);
   const [isConnected, setIsConnected] = React.useState(false);
   const [connectionStatus, setConnectionStatus] = React.useState('');
   
@@ -55,20 +58,52 @@ export default function DevicesPage() {
   const [logs, setLogs] = React.useState(initialInstrumentLogsData);
   const [logSearch, setLogSearch] = React.useState("");
 
-  const handleConnect = () => {
-    setIsConnected(true);
-    setConnectionStatus('Successfully connected to 127.0.0.1:5005');
-    toast({
-        title: "Connection Established",
-        description: "Successfully connected to the instrument.",
-    });
+  const handleConnect = async () => {
+    setIsConnecting(true);
+    setIsConnected(false);
+    try {
+        const response = await testConnection({ ip: '127.0.0.1', port: '5005' });
+        setConnectionStatus(response.message);
+        setIsConnected(response.success);
+         toast({
+            title: response.success ? "Connection Established" : "Connection Failed",
+            description: response.message,
+            variant: response.success ? "default" : "destructive",
+        });
+    } catch (error) {
+        console.error(error);
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+        setConnectionStatus(errorMessage);
+        setIsConnected(false);
+        toast({
+            title: "Connection Error",
+            description: errorMessage,
+            variant: "destructive",
+        });
+    } finally {
+        setIsConnecting(false);
+    }
   };
 
-  const handleTestConnection = () => {
-    toast({
-        title: "Connection Test",
-        description: "Simulating a test connection... Success!",
-    });
+  const handleTestConnection = async () => {
+    setIsTesting(true);
+    try {
+        const response = await testConnection({ ip: '127.0.0.1', port: '5005' });
+        toast({
+            title: "Connection Test Result",
+            description: response.message,
+        });
+    } catch (error) {
+         console.error(error);
+         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+         toast({
+            title: "Connection Test Failed",
+            description: errorMessage,
+            variant: "destructive",
+        });
+    } finally {
+        setIsTesting(false);
+    }
   }
 
   const clearEditor = () => {
@@ -182,19 +217,23 @@ export default function DevicesPage() {
               </div>
               
               <div className="flex gap-2">
-                <Button onClick={handleConnect} className="w-full sm:w-auto">
-                    Connect
+                <Button onClick={handleConnect} className="w-full sm:w-auto" disabled={isConnecting || isTesting}>
+                    {isConnecting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    {isConnecting ? 'Connecting...' : 'Connect'}
                 </Button>
-                <Button variant="outline" className="w-full sm:w-auto" onClick={handleTestConnection}>
+                <Button variant="outline" className="w-full sm:w-auto" onClick={handleTestConnection} disabled={isConnecting || isTesting}>
+                    {isTesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     Test Connection
                 </Button>
               </div>
               
-              {isConnected && (
-                <Alert className="border-green-300 bg-green-50">
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                    <AlertTitle className="text-green-700 font-semibold">Connected</AlertTitle>
-                    <AlertDescription className="text-green-600">
+              {connectionStatus && (
+                <Alert className={isConnected ? "border-green-300 bg-green-50" : "border-red-300 bg-red-50"}>
+                    <CheckCircle className={`h-4 w-4 ${isConnected ? 'text-green-600' : 'text-red-600'}`} />
+                    <AlertTitle className={`${isConnected ? 'text-green-700' : 'text-red-700'} font-semibold`}>
+                        {isConnected ? 'Connected' : 'Connection Failed'}
+                    </AlertTitle>
+                    <AlertDescription className={isConnected ? 'text-green-600' : 'text-red-600'}>
                         {connectionStatus}
                     </AlertDescription>
                 </Alert>
