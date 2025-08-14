@@ -112,7 +112,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             ))}
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter>
+        <SidebarFooter className="p-2">
           {userCanSeeSettings && settingsItem && (
             <SidebarMenu>
               <SidebarMenuItem>
@@ -130,6 +130,34 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               </SidebarMenuItem>
             </SidebarMenu>
           )}
+
+           <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="mt-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 px-2 flex items-center gap-3 cursor-pointer hover:bg-black/10 rounded-md p-2">
+                    <Avatar className="h-8 w-8">
+                        <AvatarImage src={user.photoURL ?? "https://placehold.co/40x40.png"} alt={user.displayName ?? 'User'} data-ai-hint="person portrait"/>
+                        <AvatarFallback>{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col group-data-[collapsible=icon]:hidden">
+                        <p className="text-sm font-medium leading-none text-white">{user.displayName ?? user.email}</p>
+                        <p className="text-xs leading-none text-white/70 flex items-center gap-1.5 pt-1">
+                            {userRole === 'Admin' && <ShieldCheck className="w-3.5 h-3.5" />}
+                            {userRole}
+                        </p>
+                    </div>
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 mb-2">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>Profile</DropdownMenuItem>
+                  <DropdownMenuItem onClick={logout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                  </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
         </SidebarFooter>
       </Sidebar>
       <div className="flex flex-1 flex-col">
@@ -142,36 +170,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                 </div>
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="icon" aria-label="Notifications">
-                    <Bell className="h-5 w-5" />
+                      <Bell className="h-5 w-5" />
                     </Button>
-                    <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                            <Avatar className="h-8 w-8">
-                                <AvatarImage src={user.photoURL ?? "https://placehold.co/40x40.png"} alt={user.displayName ?? 'User'} data-ai-hint="person portrait"/>
-                                <AvatarFallback>{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
-                            </Avatar>
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                        <DropdownMenuLabel>
-                            <div className="flex flex-col space-y-1">
-                                <p className="text-sm font-medium leading-none">{user.displayName ?? user.email}</p>
-
-                                <p className="text-xs leading-none text-muted-foreground flex items-center gap-1.5 pt-1">
-                                    {userRole === 'Admin' && <ShieldCheck className="w-3.5 h-3.5 text-primary" />}
-                                    {userRole}
-                                </p>
-                            </div>
-                        </DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>Profile</DropdownMenuItem>
-                        <DropdownMenuItem onClick={logout}>
-                            <LogOut className="mr-2 h-4 w-4" />
-                            <span>Log out</span>
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                    </DropdownMenu>
                 </div>
             </header>
         )}
