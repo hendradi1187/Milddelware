@@ -87,13 +87,15 @@ const systemModules: Module[] = [
         id: 'alerts',
         title: 'Alert & Notification System',
         description: 'Error, pending, sukses',
-        icon: Bell
+        icon: Bell,
+        href: '/settings/alerts'
     },
     {
         id: 'docs',
         title: 'Dokumentasi & User Manual',
         description: 'Dokumentasi & User Manual',
-        icon: FileText
+        icon: FileText,
+        href: '/settings/documentation'
     }
 ];
 
