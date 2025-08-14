@@ -6,24 +6,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle, Trash2, Edit, ShieldCheck, UserCog, Eye } from 'lucide-react';
+import { MoreHorizontal, Trash2, Edit, ShieldCheck, UserCog, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AddUserWizard } from '@/components/settings/add-user-wizard';
 
-type UserRole = 'Admin' | 'Technician' | 'QA';
+export type UserRole = 'Admin' | 'Technician' | 'QA';
 
-interface User {
+export interface User {
   id: string;
   name: string;
   email: string;
@@ -46,20 +35,14 @@ const roleConfig: Record<UserRole, { icon: React.ElementType, className: string 
 
 export default function UserManagementPage() {
   const [users, setUsers] = React.useState(mockUsers);
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 
-  const handleAddUser = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+  const handleAddUser = (newUserData: Omit<User, 'id' | 'lastLogin'>) => {
     const newUser: User = {
+      ...newUserData,
       id: `usr-00${users.length + 1}`,
-      name: formData.get('name') as string,
-      email: formData.get('email') as string,
-      role: formData.get('role') as UserRole,
       lastLogin: new Date().toISOString().slice(0, 16).replace('T', ' '),
     };
     setUsers([...users, newUser]);
-    setIsDialogOpen(false);
   };
 
 
@@ -71,50 +54,7 @@ export default function UserManagementPage() {
             <CardTitle>User Management</CardTitle>
             <CardDescription>Add, edit, or remove users and manage their roles.</CardDescription>
           </div>
-           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <PlusCircle className="mr-2 h-4 w-4" /> Add User
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New User</DialogTitle>
-                <DialogDescription>
-                  Enter the user's details and assign a role. An invitation will be sent to their email.
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleAddUser}>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="name" className="text-right">Full Name</Label>
-                    <Input id="name" name="name" className="col-span-3" required />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="email" className="text-right">Email</Label>
-                    <Input id="email" name="email" type="email" className="col-span-3" required />
-                  </div>
-                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="role" className="text-right">Role</Label>
-                     <Select name="role" required>
-                      <SelectTrigger className="col-span-3">
-                        <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Admin">Admin</SelectItem>
-                        <SelectItem value="Technician">Technician</SelectItem>
-                        <SelectItem value="QA">QA</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                  <Button type="submit">Save User</Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <AddUserWizard onSave={handleAddUser} />
         </CardHeader>
         <CardContent>
           <Table>
