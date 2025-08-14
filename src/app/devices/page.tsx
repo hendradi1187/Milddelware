@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AddDeviceWizard } from '@/components/devices/add-device-wizard';
+import { Input } from '@/components/ui/input';
 
 type DeviceStatus = 'Online' | 'Offline' | 'Standby' | 'Error';
 
