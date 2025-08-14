@@ -65,9 +65,16 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
   const mainMenuItems = menuItems.filter(item => item.href !== '/settings');
   const userCanSeeSettings = settingsItem && userRole && settingsItem.roles.includes(userRole);
+  
+  const isMenuActive = (href: string) => {
+    if (href === '/') {
+        return pathname === href;
+    }
+    return pathname.startsWith(href);
+  };
 
   const getPageTitle = () => {
-    const currentItem = allMenuItems.find(item => pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href)));
+    const currentItem = allMenuItems.find(item => isMenuActive(item.href));
     // For dashboard, we return an empty string to not show a title in the header
     return currentItem ? (currentItem.href === '/' ? '' : currentItem.label) : '';
   }
@@ -92,7 +99,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               <SidebarMenuItem key={item.label}>
                 <SidebarMenuButton
                   href={item.href}
-                  isActive={pathname === item.href}
+                  isActive={isMenuActive(item.href)}
                   tooltip={{ children: item.label }}
                   className="data-[active=true]:bg-black/20 hover:bg-black/10"
                 >
@@ -109,7 +116,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   href={settingsItem.href}
-                  isActive={pathname.startsWith(settingsItem.href)}
+                  isActive={isMenuActive(settingsItem.href)}
                   tooltip={{ children: settingsItem.label }}
                   className="data-[active=true]:bg-black/20 hover:bg-black/10"
                 >
