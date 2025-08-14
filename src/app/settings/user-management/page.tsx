@@ -1,3 +1,4 @@
+
 'use client';
 import * as React from 'react';
 import { MainLayout } from '@/components/main-layout';
@@ -43,7 +44,7 @@ export default function UserManagementPage() {
       id: `usr-00${users.length + 1}`,
       lastLogin: new Date().toISOString().slice(0, 16).replace('T', ' '),
     };
-    setUsers([...users, newUser]);
+    setUsers(currentUsers => [newUser, ...currentUsers]);
   };
 
 
