@@ -22,12 +22,12 @@ import {
   Bell,
   ClipboardCheck,
   LogOut,
+  Cloud,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { usePathname } from 'next/navigation';
-import { Skeleton } from './ui/skeleton';
 import { useAuth } from '@/hooks/use-auth';
 
 const allMenuItems = [
@@ -45,7 +45,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   
   if (loading) {
      return (
-        <div className="flex h-screen w-full items-center justify-center">
+        <div className="flex h-screen w-full items-center justify-center bg-sidebar-background">
             <div className="flex flex-col items-center gap-4">
                 <FlaskConical className="h-12 w-12 animate-pulse text-primary" />
                 <p className="text-muted-foreground">Loading LabBridge Medfusion...</p>
@@ -66,19 +66,22 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
   const getPageTitle = () => {
     const currentItem = allMenuItems.find(item => pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href)));
-    return currentItem ? currentItem.label : 'Dashboard';
+    // For dashboard, we return an empty string to not show a title in the header
+    return currentItem ? (currentItem.href === '/' ? '' : currentItem.label) : '';
   }
+
+  const pageTitle = getPageTitle();
 
   return (
     <SidebarProvider>
-      <Sidebar side="left" collapsible="icon" className="border-r">
+      <Sidebar side="left" collapsible="icon" className="border-r-0 bg-gradient-to-b from-[hsl(var(--sidebar-background))] to-[hsl(var(--sidebar-background-end))] text-sidebar-foreground">
         <SidebarHeader>
-          <div className="flex h-10 items-center justify-center gap-2 p-2 group-data-[collapsible=icon]:hidden">
-            <FlaskConical className="h-6 w-6 text-primary" />
-            <span className="text-lg font-semibold">LabBridge</span>
+           <div className="flex h-14 items-center justify-start gap-3 p-4 group-data-[collapsible=icon]:hidden">
+            <Cloud className="h-7 w-7 text-white" />
+            <span className="text-lg font-bold text-white">Middleware LIS</span>
           </div>
-           <div className="hidden h-10 items-center justify-center p-2 group-data-[collapsible=icon]:flex">
-            <FlaskConical className="h-6 w-6 text-primary" />
+           <div className="hidden h-14 items-center justify-center p-2 group-data-[collapsible=icon]:flex">
+            <Cloud className="h-7 w-7 text-white" />
           </div>
         </SidebarHeader>
         <SidebarContent className="p-2">
@@ -89,9 +92,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                   href={item.href}
                   isActive={pathname === item.href}
                   tooltip={{ children: item.label }}
+                  className="data-[active=true]:bg-black/20 hover:bg-black/10"
                 >
-                  <item.icon />
-                  <span>{item.label}</span>
+                  <item.icon className="text-white/80" />
+                  <span className="text-white">{item.label}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
@@ -105,9 +109,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                   href={settingsItem.href}
                   isActive={pathname.startsWith(settingsItem.href)}
                   tooltip={{ children: settingsItem.label }}
+                  className="data-[active=true]:bg-black/20 hover:bg-black/10"
                 >
-                  <settingsItem.icon />
-                  <span>{settingsItem.label}</span>
+                  <settingsItem.icon className="text-white/80" />
+                  <span className="text-white">{settingsItem.label}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -115,43 +120,46 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         </SidebarFooter>
       </Sidebar>
       <div className="flex flex-1 flex-col">
-        <header className="flex h-14 items-center justify-between gap-4 border-b bg-card p-4 sticky top-0 z-10">
-          <div className="flex items-center gap-2">
-            <SidebarTrigger className="md:hidden" />
-            <h1 className="text-xl font-semibold">{getPageTitle()}</h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" aria-label="Notifications">
-              <Bell className="h-5 w-5" />
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                    <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.photoURL ?? "https://placehold.co/40x40.png"} alt={user.displayName ?? 'User'} data-ai-hint="person portrait"/>
-                        <AvatarFallback>{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>
-                    <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{user.displayName ?? user.email}</p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                        {userRole}
-                        </p>
-                    </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Profile</DropdownMenuItem>
-                <DropdownMenuItem onClick={logout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </header>
+       {/* Only render header if there is a page title */}
+        {pageTitle && (
+            <header className="flex h-14 items-center justify-between gap-4 border-b bg-card p-4 sticky top-0 z-10">
+                <div className="flex items-center gap-2">
+                    <SidebarTrigger className="md:hidden" />
+                    <h1 className="text-xl font-semibold">{pageTitle}</h1>
+                </div>
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="icon" aria-label="Notifications">
+                    <Bell className="h-5 w-5" />
+                    </Button>
+                    <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                            <Avatar className="h-8 w-8">
+                                <AvatarImage src={user.photoURL ?? "https://placehold.co/40x40.png"} alt={user.displayName ?? 'User'} data-ai-hint="person portrait"/>
+                                <AvatarFallback>{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuLabel>
+                            <div className="flex flex-col space-y-1">
+                                <p className="text-sm font-medium leading-none">{user.displayName ?? user.email}</p>
+                                <p className="text-xs leading-none text-muted-foreground">
+                                {userRole}
+                                </p>
+                            </div>
+                        </DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem>Profile</DropdownMenuItem>
+                        <DropdownMenuItem onClick={logout}>
+                            <LogOut className="mr-2 h-4 w-4" />
+                            <span>Log out</span>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            </header>
+        )}
         <main className="flex-1 p-4 md:p-6 lg:p-8 bg-background">
             {children}
         </main>
