@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -48,7 +49,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   
   if (loading) {
      return (
-        <div className="flex h-screen w-full items-center justify-center bg-sidebar-background">
+        <div className="flex h-screen w-full items-center justify-center bg-background">
             <div className="flex flex-col items-center gap-4">
                 <FlaskConical className="h-12 w-12 animate-pulse text-primary" />
                 <p className="text-muted-foreground">Loading LabBridge Medfusion...</p>
@@ -75,10 +76,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   };
 
   const getPageTitle = () => {
-    // Special case for profile page
-    if (pathname === '/settings/profile') return 'My Profile';
-    
     const currentItem = allMenuItems.find(item => isMenuActive(item.href));
+    // For dashboard, we return an empty string to not show a title in the header
     return currentItem ? (currentItem.href === '/' ? '' : currentItem.label) : '';
   }
 
@@ -183,7 +182,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                     <SidebarTrigger className="md:hidden" />
                     <h1 className="text-xl font-semibold">{pageTitle}</h1>
                 </div>
-                <div className="flex items-center gap-4">
+                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="icon" aria-label="Notifications">
                       <Bell className="h-5 w-5" />
                     </Button>
