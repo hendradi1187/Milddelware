@@ -2,331 +2,226 @@
 'use client';
 import * as React from 'react';
 import { MainLayout } from '@/components/main-layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { Wifi, WifiOff, TriangleAlert, type LucideIcon, PlusCircle, Search, Clock, Server, Power, PowerOff, ChevronRight, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { Skeleton } from '@/components/ui/skeleton';
-import { AddDeviceWizard } from '@/components/devices/add-device-wizard';
 import { Input } from '@/components/ui/input';
-import Link from 'next/link';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { CheckCircle } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
-type DeviceStatus = 'Online' | 'Offline' | 'Standby' | 'Error';
-
-interface Device {
-  id: string;
-  name: string;
-  model: string;
-  connectionType: string;
-  serialNumber: string;
-  firmwareVersion: string;
-  status: DeviceStatus;
-  lastSync: string;
-  logs: string[];
-  mapping: { itemCode: string; glul: string }[];
-}
-
-const statusConfig: Record<
-  DeviceStatus,
-  {
-    label: string;
-    color: string;
-  }
-> = {
-  Online: {
-    label: 'Online',
-    color: 'bg-green-500',
-  },
-  Offline: {
-    label: 'Offline',
-    color: 'bg-red-500',
-  },
-  Standby: {
-    label: 'Standby',
-    color: 'bg-yellow-500',
-  },
-  Error: {
-    label: 'Error',
-    color: 'bg-red-500',
-  },
-};
-
-const initialMockDevices: Device[] = [
-    { id: 'DEV-001', name: 'Chemistry Analyzer', model: 'Cobas c311', connectionType: 'TCP/IP Bi-directional', status: 'Online', lastSync: new Date().toISOString(), serialNumber: '1234367890', firmwareVersion: '1:4 2', logs: ["Connected successfully"], mapping: [{itemCode: 'GLU', glul: 'GLU'}, {itemCode: 'CHOL', glul: 'CHOL'}]},
-    { id: 'DEV-002', name: 'Hematology Analyzer', model: 'Sysmex XN', connectionType: 'Serial Uni-directional', status: 'Offline', lastSync: new Date(Date.now() - 3600 * 1000).toISOString(), serialNumber: 'SN-SYS-002', firmwareVersion: '2.1.0', logs: ["Connection lost"], mapping: [{itemCode: 'WBC', glul: 'WBC'}, {itemCode: 'RBC', glul: 'RBC'}] },
-    { id: 'DEV-003', name: 'Coagulation Analyzer', model: 'ACL Elite', connectionType: 'TCP/IP Uni-directional', status: 'Online', lastSync: new Date(Date.now() - 120 * 1000).toISOString(), serialNumber: 'SN-ACL-003', firmwareVersion: '3.5.1', logs: ["Ready"], mapping: [{itemCode: 'PT', glul: 'PT'}, {itemCode: 'APTT', glul: 'APTT'}] },
-    { id: 'DEV-004', name: 'Immunoassay Analyzer', model: 'Abbott Architect', connectionType: 'Serial Uni-directional', status: 'Standby', lastSync: new Date(Date.now() - 1800 * 1000).toISOString(), serialNumber: 'SN-ABB-004', firmwareVersion: '1.9.8', logs: ["Idle"], mapping: [{itemCode: 'TSH', glul: 'TSH'}, {itemCode: 'FT4', glul: 'FT4'}] },
-    { id: 'DEV-005', name: 'Urine Analyzer', model: 'DIRUI UF-50', connectionType: 'TCP/IP Bi-directional', status: 'Offline', lastSync: new Date(Date.now() - 86400 * 1000).toISOString(), serialNumber: 'SN-DIR-005', firmwareVersion: '1.2.3', logs: ["Device powered off"], mapping: [{itemCode: 'LEU', glul: 'LEU'}, {itemCode: 'URO', glul: 'URO'}] },
+const dataMappingData = [
+  { lisCode: 'GLU', middlewareCode: 'GLU', instrumentCode: 'GLUC' },
+  { lisCode: 'CHOL', middlewareCode: 'CHOL', instrumentCode: 'CHLM' },
+  { lisCode: 'HGB', middlewareCode: 'HGB', instrumentCode: 'HGBM' },
+  { lisCode: 'WBC', middlewareCode: 'WBC', instrumentCode: 'WBCC' },
 ];
 
-function StatCard({ icon: Icon, title, value, isLoading }: { icon: LucideIcon; title: string; value: string | number; isLoading: boolean}) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        {isLoading ? <Skeleton className="h-8 w-12" /> : <div className="text-2xl font-bold">{value}</div>}
-      </CardContent>
-    </Card>
-  )
-}
+const instrumentLogsData = [
+    { timestamp: '2025-06-14 10:15:29', direction: 'TX', source: '192.168.1.50:4000', destination: 'N0015'},
+    { timestamp: '2025-08-14 10:15:45', direction: 'TX', source: '192.168.1.100:5000', destination: 'SJ 606'},
+    { timestamp: '2025-08-14 10:16:10', direction: 'RX', source: '192.168.1.100:5000', destination: 'SJ 456'},
+];
 
 export default function DevicesPage() {
-  const { toast } = useToast();
-  const [devices, setDevices] = React.useState<Device[]>([]);
-  const [selectedDevice, setSelectedDevice] = React.useState<Device | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [deviceToDelete, setDeviceToDelete] = React.useState<Device | null>(null);
-
-
-  React.useEffect(() => {
-    // Simulate network delay
-    setTimeout(() => {
-        setDevices(initialMockDevices);
-        if (initialMockDevices.length > 0) {
-            setSelectedDevice(initialMockDevices[0]);
-        }
-        setIsLoading(false);
-    }, 800)
-  }, []);
-
-  const handleAddDevice = (newDeviceData: Omit<Device, 'status' | 'lastSync' | 'logs' | 'mapping'>) => {
-    const newDevice: Device = {
-        ...newDeviceData,
-        status: 'Offline', // Default status for new devices
-        lastSync: new Date().toISOString(),
-        logs: ['Device added'],
-        mapping: [],
-    };
-    
-    setDevices(currentDevices => {
-        const updatedDevices = [newDevice, ...currentDevices];
-        if (!selectedDevice) {
-            setSelectedDevice(newDevice);
-        }
-        return updatedDevices;
-    });
-    toast({ title: "Success", description: `Device "${newDevice.name}" added successfully.` });
-  };
-  
-  const handleDeleteDevice = () => {
-    if (!deviceToDelete) return;
-
-    setDevices(currentDevices => {
-        const newDevices = currentDevices.filter(d => d.id !== deviceToDelete.id);
-        
-        if (selectedDevice?.id === deviceToDelete.id) {
-            setSelectedDevice(newDevices.length > 0 ? newDevices[0] : null);
-        }
-        return newDevices;
-    });
-    
-    toast({ title: "Device Deleted", description: `Device "${deviceToDelete.name}" has been removed.` });
-    setDeviceToDelete(null);
-  };
-  
-  const onlineCount = devices.filter(d => d.status === 'Online').length;
-  const offlineCount = devices.filter(d => d.status === 'Offline' || d.status === 'Standby').length;
-
+  const [isConnected, setIsConnected] = React.useState(false);
 
   return (
     <MainLayout>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Content Column */}
-        <div className="lg:col-span-2 flex flex-col gap-6">
-            <div className="grid gap-4 md:grid-cols-4">
-              <StatCard title="Total Devices" value={devices.length} icon={Server} isLoading={isLoading}/>
-              <StatCard title="Online" value={onlineCount} icon={Power} isLoading={isLoading}/>
-              <StatCard title="Offline" value={offlineCount} icon={PowerOff} isLoading={isLoading}/>
-              <StatCard title="Last Sync" value={isLoading ? '...' : new Date().toLocaleTimeString()} icon={Clock} isLoading={isLoading}/>
-            </div>
-          
-            <Card>
-                <CardHeader>
-                    <div className="flex items-center justify-between">
-                         <div className="flex items-center gap-4">
-                            <AddDeviceWizard onSave={handleAddDevice} />
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <Input placeholder="Search devices..." className="pl-10 w-full sm:w-64" />
-                            </div>
-                        </div>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                   <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Device ID</TableHead>
-                        <TableHead>Device Name</TableHead>
-                        <TableHead>Model</TableHead>
-                        <TableHead>Connection Type</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {isLoading ? (
-                        Array.from({ length: 5 }).map((_, i) => (
-                          <TableRow key={i}>
-                            <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                            <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                            <TableCell><Skeleton className="h-4 w-36" /></TableCell>
-                            <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                          </TableRow>
-                        ))
-                      ) : devices.map((device) => {
-                        const config = statusConfig[device.status];
-                        return (
-                          <TableRow key={device.id} onClick={() => setSelectedDevice(device)} className={cn("cursor-pointer", selectedDevice?.id === device.id && "bg-muted")}>
-                            <TableCell className="font-mono text-xs">{device.id}</TableCell>
-                            <TableCell className="font-medium">{device.name}</TableCell>
-                            <TableCell>{device.model}</TableCell>
-                            <TableCell>{device.connectionType}</TableCell>
-                            <TableCell>
-                               <div className="flex items-center gap-2">
-                                  <span className={cn("h-2.5 w-2.5 rounded-full", config.color)}></span>
-                                  <span className="text-sm">{config.label}</span>
-                               </div>
-                            </TableCell>
-                          </TableRow>
-                        )
-                      })}
-                      {!isLoading && devices.length === 0 && (
-                        <TableRow>
-                            <TableCell colSpan={5} className="h-24 text-center">
-                                No devices found. Add a device to get started.
-                            </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-            </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left Column */}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Instrument Connection</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <RadioGroup defaultValue="server">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="client" id="client" />
+                  <Label htmlFor="client">TCP/IP Mode Client</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="server" id="server" />
+                  <Label htmlFor="server">TCP/IP Mode Server</Label>
+                </div>
+              </RadioGroup>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="ip-address">IP Address</Label>
+                  <Input id="ip-address" defaultValue="192.168.1.100" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="port">Port</Label>
+                  <Input id="port" defaultValue="5000" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="timeout">Timeout</Label>
+                  <Input id="timeout" defaultValue="5000" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="retry-interval">Retry Interval</Label>
+                  <Input id="retry-interval" defaultValue="1000" />
+                </div>
+              </div>
+              
+              <Button onClick={() => setIsConnected(true)} className="bg-green-600 hover:bg-green-700 w-full sm:w-auto">
+                Connect
+              </Button>
+              
+              {isConnected && (
+                <Alert className="bg-muted/50">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <AlertTitle className="text-green-600 font-semibold">Connected</AlertTitle>
+                    <AlertDescription>
+                        Connected to 192.168.1.100:5000
+                    </AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Instrument Logs</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Input placeholder="Search logs" className="mb-4" />
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Timestamp</TableHead>
+                    <TableHead>Direction</TableHead>
+                    <TableHead>Source</TableHead>
+                    <TableHead>Destination</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {instrumentLogsData.map((log, index) => (
+                     <TableRow key={index}>
+                        <TableCell className="font-mono text-xs">{log.timestamp}</TableCell>
+                        <TableCell className="font-mono text-xs">{log.direction}</TableCell>
+                        <TableCell className="font-mono text-xs">{log.source}</TableCell>
+                        <TableCell className="font-mono text-xs">{log.destination}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Details Column */}
-        <div className="lg:col-span-1">
-            <Card className="sticky top-20">
-                 <CardHeader>
-                    {selectedDevice && !isLoading ? (
-                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground -mt-1 mb-2">
-                            <span className="font-medium text-foreground">Device Details</span>
-                            <ChevronRight className="h-4 w-4" />
-                            <span className="font-semibold text-primary truncate">{selectedDevice.name}</span>
-                        </div>
-                    ) : (
-                         <CardTitle>Device Details</CardTitle>
-                    )}
+        {/* Right Column */}
+        <div className="space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Data Mapping</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    {isLoading || !selectedDevice ? (
-                        <div className="space-y-6">
-                            <div>
-                                <Skeleton className="h-5 w-24 mb-4" />
-                                <div className="space-y-2">
-                                    <Skeleton className="h-4 w-full" />
-                                    <Skeleton className="h-4 w-4/5" />
-                                    <Skeleton className="h-4 w-full" />
-                                    <Skeleton className="h-4 w-3/4" />
-                                </div>
-                            </div>
-                             <div>
-                                <Skeleton className="h-5 w-20 mb-4" />
-                                <div className="space-y-2">
-                                    <Skeleton className="h-4 w-full" />
-                                    <Skeleton className="h-4 w-full" />
-                                </div>
-                            </div>
-                             <div>
-                                <Skeleton className="h-5 w-16 mb-4" />
-                                <Skeleton className="h-4 w-4/5" />
-                            </div>
+                     <Table>
+                        <TableHeader>
+                        <TableRow>
+                            <TableHead>LIS Code</TableHead>
+                            <TableHead>Middleware Code</TableHead>
+                            <TableHead>Instrument Code</TableHead>
+                        </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {dataMappingData.map((row, index) => (
+                                <TableRow key={index}>
+                                    <TableCell>{row.lisCode}</TableCell>
+                                    <TableCell>{row.middlewareCode}</TableCell>
+                                    <TableCell>{row.instrumentCode}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle>Mapping Editor</CardTitle>
+                    <Button variant="outline">Add Mapping</Button>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="lis-code">LIS Code</Label>
+                            <Select defaultValue="glu">
+                                <SelectTrigger id="lis-code">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="glu">GLU</SelectItem>
+                                    <SelectItem value="chol">CHOL</SelectItem>
+                                    <SelectItem value="hgb">HGB</SelectItem>
+                                    <SelectItem value="wbc">WBC</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
-                    ) : (
-                       <div className="space-y-6 text-sm">
-                            <div>
-                                <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                                    <div className="font-semibold text-muted-foreground">Device Name</div>
-                                    <div className="text-right">{selectedDevice.name}</div>
-                                    <div className="font-semibold text-muted-foreground">Model</div>
-                                    <div className="text-right">{selectedDevice.model}</div>
-                                    <div className="font-semibold text-muted-foreground">Serial Number</div>
-                                    <div className="text-right">{selectedDevice.serialNumber}</div>
-                                    <div className="font-semibold text-muted-foreground">Firmware Version</div>
-                                    <div className="text-right">{selectedDevice.firmwareVersion}</div>
-                                    <div className="font-semibold text-muted-foreground">Connection</div>
-                                    <div className="text-right">{selectedDevice.connectionType}</div>
-                                </div>
-                            </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="middleware-code">Middleware Code</Label>
+                             <Select defaultValue="gluc">
+                                <SelectTrigger id="middleware-code">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="gluc">GLUC</SelectItem>
+                                    <SelectItem value="chlm">CHLM</SelectItem>
+                                    <SelectItem value="hgbm">HGBM</SelectItem>
+                                    <SelectItem value="wbcc">WBCC</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="instrument-code">Instrument Code</Label>
+                        <Select defaultValue="it3">
+                                <SelectTrigger id="instrument-code">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="it3">IT3</SelectItem>
+                                    <SelectItem value="it4">IT4</SelectItem>
+                                </SelectContent>
+                            </Select>
+                    </div>
+                    <Button className="w-full">Save Mapping</Button>
+                </CardContent>
+            </Card>
 
-                            <div>
-                                <h4 className="font-semibold mb-2">Mapping</h4>
-                                <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                                    {selectedDevice.mapping.map(m => (
-                                        <React.Fragment key={m.itemCode}>
-                                            <div className="text-muted-foreground">{m.itemCode}</div>
-                                            <div className="text-right font-mono text-xs">{m.glul}</div>
-                                        </React.Fragment>
-                                    ))}
-                                    {selectedDevice.mapping.length === 0 && <p className="col-span-2 text-muted-foreground text-xs text-center">No mapping configured.</p>}
-                                </div>
-                            </div>
-
-                             <div>
-                                <h4 className="font-semibold mb-2">Logs</h4>
-                                <div className="flex items-center gap-2 text-muted-foreground">
-                                   <span className={cn("h-2.5 w-2.5 rounded-full", statusConfig[selectedDevice.status].color)}></span>
-                                   <span>{selectedDevice.logs[0]}</span>
-                                </div>
-                            </div>
-                             <div className="border-t pt-4">
-                                <Button variant="destructive" className="w-full" onClick={() => setDeviceToDelete(selectedDevice)}>
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete Device
-                                </Button>
-                            </div>
-                       </div>
-                    )}
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle>Instrument Logs</CardTitle>
+                    <Button variant="outline">Clear Logs</Button>
+                </CardHeader>
+                <CardContent>
+                     <Table>
+                        <TableHeader>
+                        <TableRow>
+                            <TableHead>Timestamp</TableHead>
+                            <TableHead>Source</TableHead>
+                            <TableHead>Dest.</TableHead>
+                        </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                        </TableBody>
+                    </Table>
                 </CardContent>
             </Card>
         </div>
       </div>
-      
-       <AlertDialog open={!!deviceToDelete} onOpenChange={(open) => !open && setDeviceToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the device <span className="font-semibold">{deviceToDelete?.name}</span> from the system.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteDevice} className="bg-destructive hover:bg-destructive/90">
-              Yes, delete device
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
     </MainLayout>
   );
 }
-
-    
