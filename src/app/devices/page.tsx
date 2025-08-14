@@ -40,6 +40,14 @@ interface MappingRow {
     instrumentCode: string;
 }
 
+interface LogRow {
+    id: number;
+    timestamp: string;
+    direction: string;
+    source: string;
+    data: string;
+}
+
 export default function DevicesPage() {
   const { toast } = useToast();
   const [isConnecting, setIsConnecting] = React.useState(false);
@@ -59,17 +67,30 @@ export default function DevicesPage() {
   const [instrumentCode, setInstrumentCode] = React.useState('');
   
   // State for Logs
-  const [logs, setLogs] = React.useState(initialInstrumentLogsData);
+  const [logs, setLogs] = React.useState<LogRow[]>(initialInstrumentLogsData);
   const [logSearch, setLogSearch] = React.useState("");
+
+  const addLogEntry = (message: string, source: string = 'Middleware') => {
+      const newLog: LogRow = {
+          id: Date.now(),
+          timestamp: new Date().toISOString().slice(0, 19).replace('T', ' '),
+          direction: 'SYS',
+          source: source,
+          data: message
+      };
+      setLogs(prev => [newLog, ...prev]);
+  };
 
   const handleConnect = async () => {
     setIsConnecting(true);
     setIsConnected(null);
     setConnectionStatus('');
+    addLogEntry(`Attempting to connect to ${ipAddress}:${port}...`);
     try {
         const response = await testConnection({ ip: ipAddress, port: port });
         setConnectionStatus(response.message);
         setIsConnected(response.success);
+        addLogEntry(response.message, `${ipAddress}:${port}`);
          toast({
             title: response.success ? "Connection Established" : "Connection Failed",
             description: response.message,
@@ -80,6 +101,7 @@ export default function DevicesPage() {
         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
         setConnectionStatus(`An unexpected error occurred: ${errorMessage}`);
         setIsConnected(false);
+        addLogEntry(`Error: ${errorMessage}`, `${ipAddress}:${port}`);
         toast({
             title: "Connection Error",
             description: errorMessage,
@@ -94,10 +116,12 @@ export default function DevicesPage() {
     setIsTesting(true);
     setIsConnected(null);
     setConnectionStatus('');
+    addLogEntry(`Testing connection to ${ipAddress}:${port}...`);
     try {
         const response = await testConnection({ ip: ipAddress, port: port });
         setConnectionStatus(response.message);
         setIsConnected(response.success);
+        addLogEntry(response.message, `${ipAddress}:${port}`);
         toast({
             title: "Connection Test Result",
             description: response.message,
@@ -108,6 +132,7 @@ export default function DevicesPage() {
          const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
          setConnectionStatus(`An unexpected error occurred: ${errorMessage}`);
          setIsConnected(false);
+         addLogEntry(`Test Error: ${errorMessage}`, `${ipAddress}:${port}`);
          toast({
             title: "Connection Test Failed",
             description: errorMessage,
@@ -185,7 +210,7 @@ export default function DevicesPage() {
       });
   }
   
-  const filteredLogs = logs.filter(log => log.data.toLowerCase().includes(logSearch.toLowerCase()));
+  const filteredLogs = logs.filter(log => log.data.toLowerCase().includes(logSearch.toLowerCase()) || log.source.toLowerCase().includes(logSearch.toLowerCase()));
 
 
   return (
@@ -247,9 +272,9 @@ export default function DevicesPage() {
                     </AlertTitle>
                     <AlertDescription className={`${isConnected ? 'text-green-700' : 'text-red-700'}`}>
                         {connectionStatus}
-                        {!isConnected && connectionStatus.includes('timed out') &&
+                        {!isConnected && (connectionStatus.includes('timed out') || connectionStatus.includes('ECONNREFUSED')) &&
                             <p className="text-xs mt-2">
-                                <strong>Troubleshooting Tips:</strong> Ensure the instrument's IP/Port are correct, and check for firewall rules or network issues that might be blocking the connection.
+                                <strong>Troubleshooting Tips:</strong> Ensure the instrument's IP/Port are correct, check for firewall rules or network issues. When testing locally with `npm run dev`, use IP `127.0.0.1`.
                             </p>
                         }
                     </AlertDescription>
@@ -265,7 +290,7 @@ export default function DevicesPage() {
             </CardHeader>
             <CardContent>
               <Input 
-                placeholder="Search logs by data payload..." 
+                placeholder="Search logs by data or source..." 
                 className="mb-4"
                 value={logSearch}
                 onChange={(e) => setLogSearch(e.target.value)}
@@ -284,7 +309,7 @@ export default function DevicesPage() {
                     {filteredLogs.map((log) => (
                        <TableRow key={log.id}>
                           <TableCell className="font-mono text-xs">{log.timestamp}</TableCell>
-                          <TableCell className="font-mono text-xs">{log.direction}</TableCell>
+                          <TableCell className="font-mono text-xs font-semibold">{log.direction}</TableCell>
                           <TableCell className="font-mono text-xs">{log.source}</TableCell>
                           <TableCell className="font-mono text-xs truncate max-w-xs">{log.data}</TableCell>
                       </TableRow>
