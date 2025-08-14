@@ -30,14 +30,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUser(user);
-        const userDocRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          setUserRole(userDoc.data().role as UserRole);
-        } else {
-           // Default to Admin if no specific role is found in Firestore
-           setUserRole('Admin');
+        try {
+          const userDocRef = doc(db, 'users', user.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            setUserRole(userDoc.data().role as UserRole);
+          } else {
+             // Default to Admin if no specific role is found in Firestore
+             console.log(`User document for UID ${user.uid} not found. Defaulting role to 'Admin'. Please create this document in your Firestore 'users' collection.`);
+             setUserRole('Admin');
+          }
+        } catch (error) {
+            console.error("Error fetching user role, defaulting to Admin.", error);
+            setUserRole('Admin'); // Default to admin on error to avoid being locked out
         }
+        
         if (pathname === '/login') {
             router.push('/');
         }

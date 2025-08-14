@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FlaskConical } from "lucide-react";
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { doc, getDoc } from 'firebase/firestore';
 
 export default function LoginPage() {
   const { toast } = useToast();
@@ -22,15 +23,35 @@ export default function LoginPage() {
     event.preventDefault();
     setIsLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // After successful sign-in, try to fetch the user role to ensure the document exists.
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (!userDoc.exists()) {
+        console.warn(`User document not found for UID: ${user.uid}. Defaulting to 'Admin' role. Please create the document in Firestore.`);
+        // Even if it doesn't exist, the useAuth hook will default to 'Admin',
+        // but we can pre-emptively inform the user.
+      }
+
       toast({ title: "Login Successful", description: "Redirecting to your dashboard." });
       router.push('/');
+
     } catch (error: any) {
       console.error("Login Error:", error);
+      let description = "An unknown error occurred. Please try again.";
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        description = "Invalid email or password. Please add this user in your Firebase project's Authentication section.";
+      } else if (error.code === 'unavailable') {
+         description = "Could not connect to Firebase. Please check your network connection and ensure you've created the user role document in Firestore as per the guide.";
+      }
+
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: "Please go to your Firebase Console > Authentication > Users to add this user, or use an existing one.",
+        description: description,
       });
     } finally {
       setIsLoading(false);
