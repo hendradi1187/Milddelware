@@ -1,3 +1,4 @@
+
 'use client';
 import { MainLayout } from '@/components/main-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,7 +40,8 @@ const systemModules: Module[] = [
         id: 'mapping',
         title: 'Data Mapping Engine',
         description: 'Mapping kode pemeriksaan → kode SATUSEHAT',
-        icon: GitFork
+        icon: GitFork,
+        href: '/settings/data-mapping'
     },
     {
         id: 'database',
