@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React from 'react';
@@ -36,6 +35,7 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Badge } from '@/components/ui/badge';
 
 const allMenuItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard, roles: ['Admin', 'Technician', 'QA'] },
@@ -269,3 +269,5 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     </SidebarProvider>
   );
 }
+
+    
