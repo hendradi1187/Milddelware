@@ -97,17 +97,17 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           <SidebarMenu>
             {mainMenuItems.map((item) => (
               <SidebarMenuItem key={item.label}>
-                <Link href={item.href} passHref>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isMenuActive(item.href)}
-                    tooltip={{ children: item.label }}
-                    className="data-[active=true]:bg-black/20 hover:bg-black/10"
-                  >
+                <SidebarMenuButton
+                  asChild
+                  isActive={isMenuActive(item.href)}
+                  tooltip={{ children: item.label }}
+                  className="data-[active=true]:bg-black/20 hover:bg-black/10"
+                >
+                  <Link href={item.href}>
                     <item.icon className="text-white/80" />
                     <span className="text-white">{item.label}</span>
-                  </SidebarMenuButton>
-                </Link>
+                  </Link>
+                </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
@@ -116,17 +116,17 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           {userCanSeeSettings && settingsItem && (
             <SidebarMenu>
               <SidebarMenuItem>
-                 <Link href={settingsItem.href} passHref>
-                    <SidebarMenuButton
-                        asChild
-                        isActive={isMenuActive(settingsItem.href)}
-                        tooltip={{ children: settingsItem.label }}
-                        className="data-[active=true]:bg-black/20 hover:bg-black/10"
-                    >
-                        <settingsItem.icon className="text-white/80" />
-                        <span className="text-white">{settingsItem.label}</span>
-                    </SidebarMenuButton>
-                </Link>
+                <SidebarMenuButton
+                    asChild
+                    isActive={isMenuActive(settingsItem.href)}
+                    tooltip={{ children: settingsItem.label }}
+                    className="data-[active=true]:bg-black/20 hover:bg-black/10"
+                >
+                  <Link href={settingsItem.href}>
+                    <settingsItem.icon className="text-white/80" />
+                    <span className="text-white">{settingsItem.label}</span>
+                  </Link>
+                </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
           )}
