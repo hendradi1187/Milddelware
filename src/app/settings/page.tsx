@@ -16,7 +16,7 @@ import {
   FileText,
   LucideIcon
 } from 'lucide-react';
-import * as React from 'react';
+import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -136,12 +136,11 @@ export default function SettingsPage() {
             <CardContent>
                 <div className="p-4 border rounded-lg bg-muted/20">
                     <Image
-                        src="https://placehold.co/1200x600.png"
+                        src="/images/system-architecture.png"
                         alt="System Architecture Diagram"
                         width={1200}
                         height={600}
                         className="rounded-md"
-                        data-ai-hint="system architecture diagram"
                     />
                 </div>
             </CardContent>
