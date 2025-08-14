@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CheckCircle, PlusCircle, Save, Trash2, Edit, XCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, PlusCircle, Save, Trash2, Edit, XCircle, Loader2, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { testConnection } from '@/ai/flows/instrument-flow';
 
@@ -44,11 +44,11 @@ export default function DevicesPage() {
   const { toast } = useToast();
   const [isConnecting, setIsConnecting] = React.useState(false);
   const [isTesting, setIsTesting] = React.useState(false);
-  const [isConnected, setIsConnected] = React.useState(false);
+  const [isConnected, setIsConnected] = React.useState<boolean | null>(null);
   const [connectionStatus, setConnectionStatus] = React.useState('');
   
   // State for Connection
-  const [ipAddress, setIpAddress] = React.useState('127.0.0.1');
+  const [ipAddress, setIpAddress] = React.useState('192.168.1.35');
   const [port, setPort] = React.useState('5005');
 
   // State for Mappings
@@ -64,7 +64,8 @@ export default function DevicesPage() {
 
   const handleConnect = async () => {
     setIsConnecting(true);
-    setIsConnected(false);
+    setIsConnected(null);
+    setConnectionStatus('');
     try {
         const response = await testConnection({ ip: ipAddress, port: port });
         setConnectionStatus(response.message);
@@ -77,7 +78,7 @@ export default function DevicesPage() {
     } catch (error) {
         console.error(error);
         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-        setConnectionStatus(errorMessage);
+        setConnectionStatus(`An unexpected error occurred: ${errorMessage}`);
         setIsConnected(false);
         toast({
             title: "Connection Error",
@@ -91,15 +92,22 @@ export default function DevicesPage() {
 
   const handleTestConnection = async () => {
     setIsTesting(true);
+    setIsConnected(null);
+    setConnectionStatus('');
     try {
         const response = await testConnection({ ip: ipAddress, port: port });
+        setConnectionStatus(response.message);
+        setIsConnected(response.success);
         toast({
             title: "Connection Test Result",
             description: response.message,
+            variant: response.success ? "default" : "destructive",
         });
     } catch (error) {
          console.error(error);
          const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+         setConnectionStatus(`An unexpected error occurred: ${errorMessage}`);
+         setIsConnected(false);
          toast({
             title: "Connection Test Failed",
             description: errorMessage,
@@ -232,13 +240,18 @@ export default function DevicesPage() {
               </div>
               
               {connectionStatus && (
-                <Alert className={isConnected ? "border-green-300 bg-green-50" : "border-red-300 bg-red-50"}>
-                    <CheckCircle className={`h-4 w-4 ${isConnected ? 'text-green-600' : 'text-red-600'}`} />
-                    <AlertTitle className={`${isConnected ? 'text-green-700' : 'text-red-700'} font-semibold`}>
-                        {isConnected ? 'Connected' : 'Connection Failed'}
+                 <Alert className={isConnected ? "border-green-300 bg-green-50" : "border-red-300 bg-red-50"}>
+                    {isConnected ? <CheckCircle className="h-4 w-4 text-green-600" /> : <AlertTriangle className="h-4 w-4 text-red-600" />}
+                    <AlertTitle className={`${isConnected ? 'text-green-800' : 'text-red-800'} font-semibold`}>
+                        {isConnected ? 'Connection Successful' : 'Connection Failed'}
                     </AlertTitle>
-                    <AlertDescription className={isConnected ? 'text-green-600' : 'text-red-600'}>
+                    <AlertDescription className={`${isConnected ? 'text-green-700' : 'text-red-700'}`}>
                         {connectionStatus}
+                        {!isConnected && connectionStatus.includes('timed out') &&
+                            <p className="text-xs mt-2">
+                                <strong>Troubleshooting Tips:</strong> Ensure the instrument's IP/Port are correct, and check for firewall rules or network issues that might be blocking the connection.
+                            </p>
+                        }
                     </AlertDescription>
                 </Alert>
               )}
@@ -374,5 +387,3 @@ export default function DevicesPage() {
     </MainLayout>
   );
 }
-
-    
