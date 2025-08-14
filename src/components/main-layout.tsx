@@ -30,7 +30,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
-import { Badge } from './ui/badge';
+import Link from 'next/link';
 
 const allMenuItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard, roles: ['Admin', 'Technician', 'QA'] },
@@ -97,15 +97,17 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           <SidebarMenu>
             {mainMenuItems.map((item) => (
               <SidebarMenuItem key={item.label}>
-                <SidebarMenuButton
-                  href={item.href}
-                  isActive={isMenuActive(item.href)}
-                  tooltip={{ children: item.label }}
-                  className="data-[active=true]:bg-black/20 hover:bg-black/10"
-                >
-                  <item.icon className="text-white/80" />
-                  <span className="text-white">{item.label}</span>
-                </SidebarMenuButton>
+                <Link href={item.href} passHref>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isMenuActive(item.href)}
+                    tooltip={{ children: item.label }}
+                    className="data-[active=true]:bg-black/20 hover:bg-black/10"
+                  >
+                    <item.icon className="text-white/80" />
+                    <span className="text-white">{item.label}</span>
+                  </SidebarMenuButton>
+                </Link>
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
@@ -114,15 +116,17 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           {userCanSeeSettings && settingsItem && (
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  href={settingsItem.href}
-                  isActive={isMenuActive(settingsItem.href)}
-                  tooltip={{ children: settingsItem.label }}
-                  className="data-[active=true]:bg-black/20 hover:bg-black/10"
-                >
-                  <settingsItem.icon className="text-white/80" />
-                  <span className="text-white">{settingsItem.label}</span>
-                </SidebarMenuButton>
+                 <Link href={settingsItem.href} passHref>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={isMenuActive(settingsItem.href)}
+                        tooltip={{ children: settingsItem.label }}
+                        className="data-[active=true]:bg-black/20 hover:bg-black/10"
+                    >
+                        <settingsItem.icon className="text-white/80" />
+                        <span className="text-white">{settingsItem.label}</span>
+                    </SidebarMenuButton>
+                </Link>
               </SidebarMenuItem>
             </SidebarMenu>
           )}
@@ -153,6 +157,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                         <DropdownMenuLabel>
                             <div className="flex flex-col space-y-1">
                                 <p className="text-sm font-medium leading-none">{user.displayName ?? user.email}</p>
+
                                 <p className="text-xs leading-none text-muted-foreground flex items-center gap-1.5 pt-1">
                                     {userRole === 'Admin' && <ShieldCheck className="w-3.5 h-3.5 text-primary" />}
                                     {userRole}
