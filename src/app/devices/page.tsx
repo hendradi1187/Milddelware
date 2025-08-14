@@ -70,11 +70,11 @@ export default function DevicesPage() {
   const [logs, setLogs] = React.useState<LogRow[]>(initialInstrumentLogsData);
   const [logSearch, setLogSearch] = React.useState("");
 
-  const addLogEntry = (message: string, source: string = 'Middleware') => {
+  const addLogEntry = (message: string, source: string = 'Middleware', direction: 'SYS' | 'RX' | 'TX' = 'SYS') => {
       const newLog: LogRow = {
           id: Date.now(),
           timestamp: new Date().toISOString().slice(0, 19).replace('T', ' '),
-          direction: 'SYS',
+          direction,
           source: source,
           data: message
       };
@@ -85,12 +85,12 @@ export default function DevicesPage() {
     setIsConnecting(true);
     setIsConnected(null);
     setConnectionStatus('');
-    addLogEntry(`Attempting to connect to ${ipAddress}:${port}...`);
+    addLogEntry(`Attempting to connect to ${ipAddress}:${port}...`, 'Middleware', 'TX');
     try {
         const response = await testConnection({ ip: ipAddress, port: port });
         setConnectionStatus(response.message);
         setIsConnected(response.success);
-        addLogEntry(response.message, `${ipAddress}:${port}`);
+        addLogEntry(response.message, `${ipAddress}:${port}`, 'RX');
          toast({
             title: response.success ? "Connection Established" : "Connection Failed",
             description: response.message,
@@ -101,7 +101,7 @@ export default function DevicesPage() {
         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
         setConnectionStatus(`An unexpected error occurred: ${errorMessage}`);
         setIsConnected(false);
-        addLogEntry(`Error: ${errorMessage}`, `${ipAddress}:${port}`);
+        addLogEntry(`Error: ${errorMessage}`, `${ipAddress}:${port}`, 'RX');
         toast({
             title: "Connection Error",
             description: errorMessage,
@@ -116,12 +116,12 @@ export default function DevicesPage() {
     setIsTesting(true);
     setIsConnected(null);
     setConnectionStatus('');
-    addLogEntry(`Testing connection to ${ipAddress}:${port}...`);
+    addLogEntry(`Testing connection to ${ipAddress}:${port}...`, 'Middleware', 'TX');
     try {
         const response = await testConnection({ ip: ipAddress, port: port });
         setConnectionStatus(response.message);
         setIsConnected(response.success);
-        addLogEntry(response.message, `${ipAddress}:${port}`);
+        addLogEntry(response.message, `${ipAddress}:${port}`, 'RX');
         toast({
             title: "Connection Test Result",
             description: response.message,
@@ -132,7 +132,7 @@ export default function DevicesPage() {
          const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
          setConnectionStatus(`An unexpected error occurred: ${errorMessage}`);
          setIsConnected(false);
-         addLogEntry(`Test Error: ${errorMessage}`, `${ipAddress}:${port}`);
+         addLogEntry(`Test Error: ${errorMessage}`, `${ipAddress}:${port}`, 'RX');
          toast({
             title: "Connection Test Failed",
             description: errorMessage,
@@ -165,6 +165,7 @@ export default function DevicesPage() {
       // Update existing mapping
       const updatedMapping = { id: editingMappingId, lisCode, middlewareCode, instrumentCode };
       setMappings(prev => prev.map(m => m.id === editingMappingId ? updatedMapping : m));
+      addLogEntry(`Updated mapping for LIS code: ${lisCode}`);
       toast({
           title: "Mapping Updated",
           description: "Data mapping has been successfully updated.",
@@ -178,6 +179,7 @@ export default function DevicesPage() {
           instrumentCode
       };
       setMappings(prev => [...prev, newMapping]);
+      addLogEntry(`Saved new mapping for LIS code: ${lisCode}`);
       toast({
           title: "Mapping Saved",
           description: "New data mapping has been added.",
@@ -188,7 +190,9 @@ export default function DevicesPage() {
   }
 
   const handleDeleteMapping = (id: number) => {
+      const mappingToDelete = mappings.find(m => m.id === id);
       setMappings(prev => prev.filter(m => m.id !== id));
+      addLogEntry(`Deleted mapping for LIS code: ${mappingToDelete?.lisCode}`);
       toast({
           title: "Mapping Deleted",
           description: "The data mapping has been removed.",
