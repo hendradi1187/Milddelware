@@ -1,10 +1,12 @@
+
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, User, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { FlaskConical } from 'lucide-react';
 
 type UserRole = 'Admin' | 'Technician' | 'QA' | null;
 
@@ -17,40 +19,12 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Helper function to create a mock user for simulation
-const createMockUser = (role: UserRole): User => ({
-  uid: `mock-${role?.toLowerCase()}-uid`,
-  email: `${role?.toLowerCase()}@medfusion.com`,
-  displayName: `${role} (Simulated)`,
-  emailVerified: true,
-  isAnonymous: false,
-  metadata: {},
-  providerData: [],
-  providerId: 'password',
-  tenantId: null,
-  photoURL: null,
-  // Add dummy implementations for methods
-  delete: async () => {},
-  getIdToken: async () => 'mock-token',
-  getIdTokenResult: async () => ({
-    token: 'mock-token',
-    expirationTime: '',
-    authTime: '',
-    issuedAtTime: '',
-    signInProvider: null,
-    signInSecondFactor: null,
-    claims: {},
-  }),
-  reload: async () => {},
-  toJSON: () => ({}),
-});
-
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -61,34 +35,52 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (userDoc.exists()) {
           setUserRole(userDoc.data().role as UserRole);
         } else {
-           // Default to Admin in simulation if no specific role is found
+           // Default to Admin if no specific role is found in Firestore
            setUserRole('Admin');
         }
+        if (pathname === '/login') {
+            router.push('/');
+        }
       } else {
-        // --- SIMULATION BYPASS ---
-        // Change this value to 'Admin', 'Technician', or 'QA' to test different roles
-        const simulatedRole: UserRole = 'Technician';
-        console.warn(`SIMULATION MODE: Bypassing login and mocking ${simulatedRole} user.`);
-        const mockUser = createMockUser(simulatedRole);
-        setUser(mockUser);
-        setUserRole(simulatedRole);
+        setUser(null);
+        setUserRole(null);
+        if (pathname !== '/login') {
+            router.push('/login');
+        }
       }
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, [router]);
+  }, [router, pathname]);
   
   const logout = async () => {
-    // In simulation mode, we just redirect. In a real scenario, we sign out.
-    if (user && !user.uid.startsWith('mock-')) {
-        await signOut(auth);
-    }
-    // Clear state and redirect to login
+    await signOut(auth);
     setUser(null);
     setUserRole(null);
     router.push('/login');
   };
+
+  if (loading && pathname !== '/login') {
+    return (
+        <div className="flex h-screen w-full items-center justify-center bg-background">
+            <div className="flex flex-col items-center gap-4">
+                <FlaskConical className="h-12 w-12 animate-pulse text-primary" />
+                <p className="text-muted-foreground">Loading LabBridge Medfusion...</p>
+            </div>
+        </div>
+    );
+  }
+
+  // Do not render children if we are on the login page and not authenticated
+  if (!user && pathname !== '/login') {
+      return null;
+  }
+    
+  // Do not render children until loading is false, except for the login page itself
+  if (loading && pathname === '/login') {
+    return null;
+  }
 
   return (
     <AuthContext.Provider value={{ user, userRole, loading, logout }}>
