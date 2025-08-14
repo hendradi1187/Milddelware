@@ -43,7 +43,7 @@ export default function LoginPage() {
       console.error("Login Error:", error);
       let description = "An unknown error occurred. Please try again.";
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        description = "Invalid email or password. Please add this user in your Firebase project's Authentication section.";
+        description = "Invalid email or password. Please double-check your credentials and try again.";
       } else if (error.code === 'unavailable') {
          description = "Could not connect to Firebase. Please check your network connection and ensure you've created the user role document in Firestore as per the guide.";
       }
