@@ -9,6 +9,7 @@
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
+import * as net from 'net';
 
 const ConnectionTestInputSchema = z.object({
   ip: z.string().ip({ message: "Invalid IP address" }),
@@ -33,23 +34,44 @@ const testConnectionFlow = ai.defineFlow(
     outputSchema: ConnectionTestOutputSchema,
   },
   async ({ ip, port }) => {
-    // Simulate a network delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    const portNum = parseInt(port, 10);
 
-    // Simulate a random success/failure for demonstration
-    const isSuccess = Math.random() > 0.3; // 70% chance of success
+    return new Promise((resolve) => {
+      const socket = new net.Socket();
+      const timeout = 2000; // 2 seconds timeout
 
-    if (isSuccess) {
-      return {
-        success: true,
-        message: `Successfully connected to instrument at ${ip}:${port}.`,
-      };
-    } else {
-      return {
-        success: false,
-        message: `Failed to connect to ${ip}:${port}. Check network and instrument status.`,
-      };
-    }
+      const timer = setTimeout(() => {
+        socket.destroy();
+        resolve({
+          success: false,
+          message: `Connection to ${ip}:${portNum} timed out after ${timeout / 1000} seconds.`,
+        });
+      }, timeout);
+
+      socket.on('connect', () => {
+        clearTimeout(timer);
+        socket.end();
+        resolve({
+          success: true,
+          message: `Successfully connected to instrument at ${ip}:${portNum}.`,
+        });
+      });
+
+      socket.on('error', (err) => {
+        clearTimeout(timer);
+        socket.destroy();
+        resolve({
+          success: false,
+          message: `Failed to connect to ${ip}:${portNum}. Error: ${err.message}`,
+        });
+      });
+      
+      // Since this runs in a serverless environment, connecting to 'localhost' 
+      // refers to the server's localhost, not the user's. 
+      // For local testing with tools like Hercules, the app and the tool 
+      // must be on the same machine, and you should use the machine's local network IP.
+      socket.connect(portNum, ip);
+    });
   }
 );
 
