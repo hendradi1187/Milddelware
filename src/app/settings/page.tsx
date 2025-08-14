@@ -45,7 +45,8 @@ const systemModules: Module[] = [
         id: 'database',
         title: 'Database Management',
         description: 'PostgreSQL/MySQL for server, SQLite for offline',
-        icon: Database
+        icon: Database,
+        href: '/settings/database-management'
     },
     {
         id: 'offline',
