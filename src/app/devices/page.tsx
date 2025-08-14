@@ -1,3 +1,4 @@
+
 'use client';
 import * as React from 'react';
 import { MainLayout } from '@/components/main-layout';
@@ -100,7 +101,7 @@ export default function DevicesPage() {
     };
     
     setDevices(currentDevices => [newDevice, ...currentDevices]);
-    toast({ title: "Success", description: "Device added to local list." });
+    toast({ title: "Success", description: `Device "${newDevice.name}" added successfully.` });
   };
   
   const onlineCount = devices.filter(d => d.status === 'Online').length;
