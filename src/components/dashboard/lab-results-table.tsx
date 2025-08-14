@@ -130,7 +130,7 @@ export function LabResultsTable({ statusFilter, searchQuery }: { statusFilter: s
                 <TableCell className="hidden lg:table-cell">{result.unit}</TableCell>
                 <TableCell className="hidden md:table-cell">{result.timestamp}</TableCell>
                 <TableCell className="text-right">
-                  <Badge variant="outline" className={cn("text-xs capitalize font-normal", statusBadgeConfig[result.status])}>
+                  <Badge variant="outline" className={cn("text-xs capitalize font-normal border-2", statusBadgeConfig[result.status])}>
                     {result.status}
                   </Badge>
                 </TableCell>

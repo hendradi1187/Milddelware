@@ -203,7 +203,7 @@ export default function DevicesPage() {
                     <TableCell className="font-medium">{device.name}</TableCell>
                     <TableCell>{device.type}</TableCell>
                     <TableCell>
-                       <Badge variant="outline" className={cn('text-xs font-semibold', config.badgeClass)}>
+                       <Badge variant="outline" className={cn('text-xs font-semibold border-2', config.badgeClass)}>
                           <Icon className="mr-1 h-3 w-3" />
                           {config.label}
                         </Badge>
