@@ -16,22 +16,104 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, PlusCircle, Save, Trash2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
-const dataMappingData = [
-  { lisCode: 'GLU-LIS', middlewareCode: 'GLU', instrumentCode: 'GLUC' },
-  { lisCode: 'HB-LIS', middlewareCode: 'HGB', instrumentCode: 'HGBM' },
-  { lisCode: 'CHOL-LIS', middlewareCode: 'CHOL', instrumentCode: 'CHOL' },
+// Initial Data
+const initialMappingData = [
+  { id: 1, lisCode: 'GLU-LIS', middlewareCode: 'GLU', instrumentCode: 'GLUC' },
+  { id: 2, lisCode: 'HB-LIS', middlewareCode: 'HGB', instrumentCode: 'HGBM' },
+  { id: 3, lisCode: 'CHOL-LIS', middlewareCode: 'CHOL', instrumentCode: 'CHOL' },
 ];
 
-const instrumentLogsData = [
-    { timestamp: '2023-10-28 10:15:29', direction: 'RX', source: '192.168.1.100:5000', data: 'MSH|^~\\&|...'},
-    { timestamp: '2023-10-28 10:15:45', direction: 'TX', source: 'Middleware', data: 'ACK|...'},
-    { timestamp: '2023-10-28 10:16:10', direction: 'RX', source: '192.168.1.100:5000', data: 'OBX|1|NM|...'},
+const initialInstrumentLogsData = [
+    { id: 1, timestamp: '2023-10-28 10:15:29', direction: 'RX', source: '192.168.1.100:5000', data: 'MSH|^~\\&|...'},
+    { id: 2, timestamp: '2023-10-28 10:15:45', direction: 'TX', source: 'Middleware', data: 'ACK|...'},
+    { id: 3, timestamp: '2023-10-28 10:16:10', direction: 'RX', source: '192.168.1.100:5000', data: 'OBX|1|NM|...'},
 ];
+
+interface MappingRow {
+    id: number;
+    lisCode: string;
+    middlewareCode: string;
+    instrumentCode: string;
+}
 
 export default function DevicesPage() {
+  const { toast } = useToast();
   const [isConnected, setIsConnected] = React.useState(false);
+  const [connectionStatus, setConnectionStatus] = React.useState('');
+  
+  // State for Mappings
+  const [mappings, setMappings] = React.useState<MappingRow[]>(initialMappingData);
+  const [lisCode, setLisCode] = React.useState('');
+  const [middlewareCode, setMiddlewareCode] = React.useState('');
+  const [instrumentCode, setInstrumentCode] = React.useState('');
+  
+  // State for Logs
+  const [logs, setLogs] = React.useState(initialInstrumentLogsData);
+  const [logSearch, setLogSearch] = React.useState("");
+
+  const handleConnect = () => {
+    setIsConnected(true);
+    setConnectionStatus('Successfully connected to 127.0.0.1:5005');
+    toast({
+        title: "Connection Established",
+        description: "Successfully connected to the instrument.",
+    });
+  };
+
+  const handleTestConnection = () => {
+    toast({
+        title: "Connection Test",
+        description: "Simulating a test connection... Success!",
+    });
+  }
+  
+  const handleSaveMapping = (e: React.FormEvent) => {
+    e.preventDefault();
+    if(!lisCode || !middlewareCode || !instrumentCode) {
+        toast({
+            variant: "destructive",
+            title: "Validation Error",
+            description: "Please fill in all mapping fields.",
+        });
+        return;
+    }
+    const newMapping: MappingRow = {
+        id: Date.now(),
+        lisCode,
+        middlewareCode,
+        instrumentCode
+    };
+    setMappings(prev => [...prev, newMapping]);
+    setLisCode('');
+    setMiddlewareCode('');
+    setInstrumentCode('');
+    toast({
+        title: "Mapping Saved",
+        description: "New data mapping has been added.",
+    });
+  }
+
+  const handleDeleteMapping = (id: number) => {
+      setMappings(prev => prev.filter(m => m.id !== id));
+      toast({
+          title: "Mapping Deleted",
+          description: "The data mapping has been removed.",
+      });
+  }
+  
+  const handleClearLogs = () => {
+      setLogs([]);
+      toast({
+          title: "Logs Cleared",
+          description: "All instrument logs have been deleted.",
+      });
+  }
+  
+  const filteredLogs = logs.filter(log => log.data.toLowerCase().includes(logSearch.toLowerCase()));
+
 
   return (
     <MainLayout>
@@ -74,10 +156,10 @@ export default function DevicesPage() {
               </div>
               
               <div className="flex gap-2">
-                <Button onClick={() => setIsConnected(true)} className="w-full sm:w-auto">
+                <Button onClick={handleConnect} className="w-full sm:w-auto">
                     Connect
                 </Button>
-                <Button variant="outline" className="w-full sm:w-auto">
+                <Button variant="outline" className="w-full sm:w-auto" onClick={handleTestConnection}>
                     Test Connection
                 </Button>
               </div>
@@ -87,7 +169,7 @@ export default function DevicesPage() {
                     <CheckCircle className="h-4 w-4 text-green-600" />
                     <AlertTitle className="text-green-700 font-semibold">Connected</AlertTitle>
                     <AlertDescription className="text-green-600">
-                        Successfully connected to 127.0.0.1:5005
+                        {connectionStatus}
                     </AlertDescription>
                 </Alert>
               )}
@@ -97,10 +179,15 @@ export default function DevicesPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Instrument Logs</CardTitle>
-              <Button variant="outline">Clear Logs</Button>
+              <Button variant="outline" onClick={handleClearLogs}>Clear Logs</Button>
             </CardHeader>
             <CardContent>
-              <Input placeholder="Search logs by data payload..." className="mb-4" />
+              <Input 
+                placeholder="Search logs by data payload..." 
+                className="mb-4"
+                value={logSearch}
+                onChange={(e) => setLogSearch(e.target.value)}
+              />
               <div className="border rounded-md max-h-96 overflow-y-auto">
                 <Table>
                   <TableHeader>
@@ -112,14 +199,19 @@ export default function DevicesPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {instrumentLogsData.map((log, index) => (
-                       <TableRow key={index}>
+                    {filteredLogs.map((log) => (
+                       <TableRow key={log.id}>
                           <TableCell className="font-mono text-xs">{log.timestamp}</TableCell>
                           <TableCell className="font-mono text-xs">{log.direction}</TableCell>
                           <TableCell className="font-mono text-xs">{log.source}</TableCell>
                           <TableCell className="font-mono text-xs truncate max-w-xs">{log.data}</TableCell>
                       </TableRow>
                     ))}
+                    {filteredLogs.length === 0 && (
+                        <TableRow>
+                            <TableCell colSpan={4} className="h-24 text-center">No logs found.</TableCell>
+                        </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </div>
@@ -134,23 +226,34 @@ export default function DevicesPage() {
                     <CardTitle>Data Mapping</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="border rounded-md">
+                    <div className="border rounded-md max-h-[300px] overflow-y-auto">
                         <Table>
                             <TableHeader>
                             <TableRow>
                                 <TableHead>LIS Code</TableHead>
                                 <TableHead>Middleware Code</TableHead>
                                 <TableHead>Instrument Code</TableHead>
+                                <TableHead className="w-[50px]"></TableHead>
                             </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {dataMappingData.map((row, index) => (
-                                    <TableRow key={index}>
+                                {mappings.map((row) => (
+                                    <TableRow key={row.id}>
                                         <TableCell className="font-semibold">{row.lisCode}</TableCell>
                                         <TableCell>{row.middlewareCode}</TableCell>
                                         <TableCell>{row.instrumentCode}</TableCell>
+                                        <TableCell>
+                                            <Button variant="ghost" size="icon" onClick={() => handleDeleteMapping(row.id)}>
+                                                <Trash2 className="h-4 w-4 text-muted-foreground" />
+                                            </Button>
+                                        </TableCell>
                                     </TableRow>
                                 ))}
+                                {mappings.length === 0 && (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="h-24 text-center">No mappings defined.</TableCell>
+                                    </TableRow>
+                                )}
                             </TableBody>
                         </Table>
                     </div>
@@ -161,26 +264,30 @@ export default function DevicesPage() {
                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Mapping Editor</CardTitle>
                     <div className="flex gap-2">
-                        <Button variant="outline">Import</Button>
-                        <Button variant="outline">Export</Button>
+                        <Button variant="outline" disabled>Import</Button>
+                        <Button variant="outline" disabled>Export</Button>
                     </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent>
+                  <form onSubmit={handleSaveMapping} className="space-y-4">
                     <div className="grid grid-cols-1 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="lis-code">LIS Code</Label>
-                             <Input id="lis-code" placeholder="e.g., GLU-LIS" />
+                             <Input id="lis-code" placeholder="e.g., GLU-LIS" value={lisCode} onChange={e => setLisCode(e.target.value)} />
                         </div>
                          <div className="space-y-2">
                             <Label htmlFor="middleware-code">Middleware Code</Label>
-                             <Input id="middleware-code" placeholder="e.g., GLU" />
+                             <Input id="middleware-code" placeholder="e.g., GLU" value={middlewareCode} onChange={e => setMiddlewareCode(e.target.value)} />
                         </div>
                          <div className="space-y-2">
                             <Label htmlFor="instrument-code">Instrument Code</Label>
-                            <Input id="instrument-code" placeholder="e.g., GLUC" />
+                            <Input id="instrument-code" placeholder="e.g., GLUC" value={instrumentCode} onChange={e => setInstrumentCode(e.target.value)} />
                         </div>
                     </div>
-                    <Button className="w-full">Save Mapping</Button>
+                    <Button type="submit" className="w-full">
+                        <Save className="mr-2 h-4 w-4" /> Save Mapping
+                    </Button>
+                  </form>
                 </CardContent>
             </Card>
         </div>
