@@ -71,9 +71,13 @@ export default function DevicesPage() {
   const [logSearch, setLogSearch] = React.useState("");
 
   const addLogEntry = (message: string, source: string = 'Middleware', direction: 'SYS' | 'RX' | 'TX' = 'SYS') => {
+      const now = new Date();
+      const pad = (num: number) => String(num).padStart(2, '0');
+      const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+      
       const newLog: LogRow = {
           id: Date.now(),
-          timestamp: new Date().toISOString().slice(0, 19).replace('T', ' '),
+          timestamp: timestamp,
           direction,
           source: source,
           data: message
