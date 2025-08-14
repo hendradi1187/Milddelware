@@ -149,7 +149,7 @@ export default function DashboardPage() {
             <div className="grid gap-6 lg:grid-cols-5">
                 <Card className="lg:col-span-2">
                     <CardHeader>
-                        <CardTitle>My Access & Features</CardTitle>
+                        <CardTitle>Middleware Modules</CardTitle>
                         <CardDescription>Modules available for your role.</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -204,5 +204,3 @@ export default function DashboardPage() {
     </MainLayout>
   );
 }
-
-    
