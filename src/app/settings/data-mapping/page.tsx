@@ -37,11 +37,17 @@ const mockDevices = [
 
 export default function DataMappingPage() {
     const [selectedDevice, setSelectedDevice] = React.useState<string | undefined>(mockDevices[0].id);
-    const [mappings, setMappings] = React.useState<MappingRow[]>(initialMappings[mockDevices[0].id] || []);
+    const [mappings, setMappings] = React.useState<MappingRow[]>([]);
+
+    React.useEffect(() => {
+        if(selectedDevice) {
+            setMappings(initialMappings[selectedDevice] || []);
+        }
+    }, [selectedDevice]);
+
 
     const handleDeviceChange = (deviceId: string) => {
         setSelectedDevice(deviceId);
-        setMappings(initialMappings[deviceId] || []);
     };
     
     const handleMappingChange = (id: number, field: keyof MappingRow, value: string) => {
