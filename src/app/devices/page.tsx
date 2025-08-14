@@ -12,9 +12,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { collection, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { Timestamp } from 'firebase/firestore';
 
 type DeviceStatus = 'connected' | 'disconnected' | 'error';
 
@@ -51,6 +48,12 @@ const statusConfig: Record<
   },
 };
 
+const initialMockDevices: Device[] = [
+    { id: 'XL-200', name: 'Roche Cobas XL-200', type: 'Chemistry Analyzer', status: 'connected', lastCommunication: new Date(Date.now() - 2 * 60 * 1000).toLocaleString() },
+    { id: 'I-800', name: 'Immunoassay System I-800', type: 'Immunoassay Analyzer', status: 'disconnected', lastCommunication: new Date(Date.now() - 60 * 60 * 1000).toLocaleString() },
+    { id: 'CBC-5D', name: 'Sysmex CBC-5D', type: 'Hematology Analyzer', status: 'error', lastCommunication: new Date(Date.now() - 24 * 60 * 60 * 1000).toLocaleString() },
+];
+
 
 export default function DevicesPage() {
   const { toast } = useToast();
@@ -60,33 +63,13 @@ export default function DevicesPage() {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 
   const fetchDevices = React.useCallback(async () => {
-    // Forcing loading state for refresh effect
     if (!isRefreshing) setIsLoading(true);
-    try {
-      const querySnapshot = await getDocs(collection(db, 'devices'));
-      const devicesData = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        const lastComm = data.lastCommunication instanceof Timestamp 
-          ? data.lastCommunication.toDate() 
-          : new Date();
-        
-        return {
-          id: doc.id,
-          name: data.name,
-          type: data.type,
-          status: data.status,
-          lastCommunication: lastComm.toLocaleString(),
-        };
-      }) as Device[];
-      setDevices(devicesData);
-    } catch (error) {
-      console.error("Error fetching devices:", error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch devices from Firestore.' });
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  }, [toast, isRefreshing]);
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 800)); 
+    setDevices(initialMockDevices);
+    setIsLoading(false);
+    setIsRefreshing(false);
+  }, [isRefreshing]);
   
 
   React.useEffect(() => {
@@ -102,26 +85,19 @@ export default function DevicesPage() {
   const handleAddDevice = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const newDevice = {
-      // The Device ID from the form is not used as the Firestore document ID here.
-      // Firestore will auto-generate an ID for the new document.
-      // We still save the user-provided ID as a field in the document.
-      deviceId: formData.get('id') as string, 
+    const newDevice: Device = {
+      id: formData.get('id') as string, 
       name: formData.get('name') as string,
       type: formData.get('type') as string,
-      status: 'disconnected', // Default status
-      lastCommunication: serverTimestamp(),
+      status: 'disconnected', // Default status for new devices
+      lastCommunication: new Date().toLocaleString(),
     };
     
-    try {
-      await addDoc(collection(db, "devices"), newDevice);
-      toast({ title: "Success", description: "Device added successfully." });
-      setIsDialogOpen(false); // Close dialog
-      await fetchDevices(); // Refresh list
-    } catch(error) {
-       console.error("Error adding device:", error);
-       toast({ variant: 'destructive', title: 'Error', description: 'Could not add device.' });
-    }
+    // Simulate adding to local state
+    setDevices(currentDevices => [newDevice, ...currentDevices]);
+    
+    toast({ title: "Success (Simulation)", description: "Device added to local list." });
+    setIsDialogOpen(false); // Close dialog
   };
 
 
@@ -201,7 +177,6 @@ export default function DevicesPage() {
                 const Icon = config.icon;
                 return (
                   <TableRow key={device.id}>
-                    {/* We display the auto-generated Firestore ID here */}
                     <TableCell className="font-mono text-xs">{device.id}</TableCell>
                     <TableCell className="font-medium">{device.name}</TableCell>
                     <TableCell>{device.type}</TableCell>
