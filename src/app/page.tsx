@@ -4,10 +4,12 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { MainLayout } from '@/components/main-layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Wifi, FileClock, AlertCircle, CheckCircle, HelpCircle, AlertTriangle } from 'lucide-react';
+import { Wifi, FileClock, AlertCircle, CheckCircle, HelpCircle, AlertTriangle, ShieldCheck, UserCog, Eye, LayoutDashboard, CircuitBoard, Beaker, ClipboardCheck, FileText as FileTextIcon, Settings, LucideIcon } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+import { useAuth } from '@/hooks/use-auth';
+import { Badge } from '@/components/ui/badge';
 
 const dataProcessingData = [
   { name: '00:00', successful: 12, pending: 5, failed: 2 },
@@ -19,19 +21,19 @@ const dataProcessingData = [
   { name: '06:00', successful: 42, pending: 4, failed: 0 },
 ];
 
-
-const middlewareModules = [
-    { title: 'Authentication & Authorization' },
-    { title: 'Database Management' },
-    { title: 'Instrument Communication', subItems: ['TCP/IP uni-directional', 'TCP/IP bi-directional', 'Serial uni-directional', 'Serial bi-directional'] },
-    { title: 'Communication with LIS & SATUSEHAT' },
-    { title: 'Data Mapping Engine' },
-    { title: 'Online/Offline Capability' },
-    { title: 'Business Logic Layer' },
+const allAppModules: { title: string; icon: LucideIcon; roles: string[] }[] = [
+    { title: 'Dashboard', icon: LayoutDashboard, roles: ['Admin', 'Technician', 'QA'] },
+    { title: 'Devices', icon: CircuitBoard, roles: ['Admin', 'Technician'] },
+    { title: 'Results', icon: Beaker, roles: ['Admin', 'Technician', 'QA'] },
+    { title: 'QA / QC', icon: ClipboardCheck, roles: ['Admin', 'QA'] },
+    { title: 'Logs', icon: FileTextIcon, roles: ['Admin', 'Technician'] },
+    { title: 'Settings', icon: Settings, roles: ['Admin'] },
 ];
+
 
 export default function DashboardPage() {
   const [loading, setLoading] = React.useState(true);
+  const { userRole } = useAuth();
   const [stats, setStats] = React.useState({
     connectedDevices: 0,
     pendingResults: 0,
@@ -84,6 +86,15 @@ export default function DashboardPage() {
       </div>
     );
   }
+
+  const roleConfig: Record<string, { icon: LucideIcon, className: string }> = {
+    Admin: { icon: ShieldCheck, className: 'bg-primary/10 text-primary border-primary/20' },
+    Technician: { icon: UserCog, className: 'bg-blue-100 text-blue-800 border-blue-200' },
+    QA: { icon: Eye, className: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+  };
+
+  const accessibleModules = allAppModules.filter(module => userRole && module.roles.includes(userRole));
+  const RoleIcon = userRole ? roleConfig[userRole]?.icon : UserCog;
 
   return (
     <MainLayout>
@@ -138,20 +149,33 @@ export default function DashboardPage() {
             <div className="grid gap-6 lg:grid-cols-5">
                 <Card className="lg:col-span-2">
                     <CardHeader>
-                        <CardTitle>Middleware Modules</CardTitle>
+                        <CardTitle>My Access & Features</CardTitle>
+                        <CardDescription>Modules available for your role.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
-                            {middlewareModules.map(module => (
-                                <li key={module.title}><span className="text-foreground font-medium">{module.title}</span>
-                                    {module.subItems && (
-                                        <ul className="list-disc pl-5 mt-1 space-y-1">
-                                            {module.subItems.map(sub => <li key={sub}>{sub}</li>)}
-                                        </ul>
-                                    )}
-                                </li>
-                            ))}
-                        </ul>
+                        {userRole ? (
+                            <>
+                                <div className="flex items-center mb-4">
+                                     <Badge variant="outline" className={roleConfig[userRole]?.className + " gap-2 text-base font-semibold"}>
+                                        <RoleIcon className="h-4 w-4" />
+                                        {userRole}
+                                    </Badge>
+                                </div>
+                                <div className="space-y-3">
+                                {accessibleModules.map(module => {
+                                    const Icon = module.icon;
+                                    return (
+                                        <div key={module.title} className="flex items-center gap-3 text-sm">
+                                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-muted-foreground flex-shrink-0">
+                                                <Icon className="h-5 w-5" />
+                                            </div>
+                                            <span className="font-medium text-foreground">{module.title}</span>
+                                        </div>
+                                    )
+                                })}
+                                </div>
+                            </>
+                        ) : <Skeleton className="h-32 w-full" />}
                     </CardContent>
                 </Card>
 
@@ -176,17 +200,9 @@ export default function DashboardPage() {
                     </CardContent>
                 </Card>
             </div>
-            
-             <Card>
-                <CardHeader>
-                    <CardTitle>Business Logic Layer</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-sm text-muted-foreground">This section can be used to display information about the business logic layer, such as active rules, processing pipelines, or other relevant metrics.</p>
-                </CardContent>
-            </Card>
-
         </div>
     </MainLayout>
   );
 }
+
+    
