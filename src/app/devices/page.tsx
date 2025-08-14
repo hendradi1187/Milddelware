@@ -103,7 +103,10 @@ export default function DevicesPage() {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const newDevice = {
-      id: formData.get('id') as string,
+      // The Device ID from the form is not used as the Firestore document ID here.
+      // Firestore will auto-generate an ID for the new document.
+      // We still save the user-provided ID as a field in the document.
+      deviceId: formData.get('id') as string, 
       name: formData.get('name') as string,
       type: formData.get('type') as string,
       status: 'disconnected', // Default status
@@ -111,8 +114,6 @@ export default function DevicesPage() {
     };
     
     try {
-      // In a real app, you would probably want to use the ID field from the form as the document ID
-      // For simplicity, we'll let firestore auto-generate an ID
       await addDoc(collection(db, "devices"), newDevice);
       toast({ title: "Success", description: "Device added successfully." });
       setIsDialogOpen(false); // Close dialog
@@ -200,6 +201,7 @@ export default function DevicesPage() {
                 const Icon = config.icon;
                 return (
                   <TableRow key={device.id}>
+                    {/* We display the auto-generated Firestore ID here */}
                     <TableCell className="font-mono text-xs">{device.id}</TableCell>
                     <TableCell className="font-medium">{device.name}</TableCell>
                     <TableCell>{device.type}</TableCell>
