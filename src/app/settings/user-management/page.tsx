@@ -11,6 +11,16 @@ import { MoreHorizontal, Trash2, Edit, ShieldCheck, UserCog, Eye, ChevronRight, 
 import { cn } from '@/lib/utils';
 import { AddUserWizard } from '@/components/settings/add-user-wizard';
 import Link from 'next/link';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 export type UserRole = 'Admin' | 'Technician' | 'QA';
 
@@ -37,6 +47,7 @@ const roleConfig: Record<UserRole, { icon: React.ElementType, className: string 
 
 export default function UserManagementPage() {
   const [users, setUsers] = React.useState(mockUsers);
+  const [userToDelete, setUserToDelete] = React.useState<User | null>(null);
 
   const handleAddUser = (newUserData: Omit<User, 'id' | 'lastLogin'>) => {
     const newUser: User = {
@@ -47,6 +58,10 @@ export default function UserManagementPage() {
     setUsers(currentUsers => [newUser, ...currentUsers]);
   };
 
+  const handleDeleteUser = (userId: string) => {
+    setUsers(currentUsers => currentUsers.filter(user => user.id !== userId));
+    setUserToDelete(null);
+  }
 
   return (
     <MainLayout>
@@ -109,7 +124,7 @@ export default function UserManagementPage() {
                             <Edit className="mr-2 h-4 w-4" />
                             Edit User
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600 focus:text-red-600">
+                          <DropdownMenuItem className="text-red-600 focus:text-red-600" onSelect={() => setUserToDelete(user)}>
                             <Trash2 className="mr-2 h-4 w-4" />
                             Delete User
                           </DropdownMenuItem>
@@ -123,6 +138,24 @@ export default function UserManagementPage() {
           </Table>
         </CardContent>
       </Card>
+      
+      <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the user account for <span className="font-semibold">{userToDelete?.name}</span> and remove their data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => userToDelete && handleDeleteUser(userToDelete.id)} className="bg-destructive hover:bg-destructive/90">
+              Yes, delete user
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </MainLayout>
   );
 }
