@@ -53,7 +53,7 @@ const systemModules: Module[] = [
     {
         id: 'offline',
         title: 'Online/Offline Capability',
-        description: 'Firebase RTDB + local cache SQLite',
+        description: 'System automatically saves data locally when offline and syncs when reconnected. No setup required.',
         icon: CloudCog
     },
     {
