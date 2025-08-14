@@ -1,3 +1,4 @@
+
 'use client';
 import * as React from 'react';
 import { MainLayout } from '@/components/main-layout';
@@ -7,24 +8,30 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/use-auth';
-import { Camera, Save, Info } from 'lucide-react';
+import { Camera, Save, Info, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { updateProfile } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ProfilePage() {
   const { user } = useAuth();
-  const [name, setName] = React.useState(user?.displayName || '');
-  const [email, setEmail] = React.useState(user?.email || '');
-  const [avatarPreview, setAvatarPreview] = React.useState<string | null>(user?.photoURL || null);
+  const { toast } = useToast();
+  const [name, setName] = React.useState('');
+  const [email, setEmail] = React.useState('');
+  const [avatarPreview, setAvatarPreview] = React.useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [isSaving, setIsSaving] = React.useState(false);
 
   React.useEffect(() => {
-    // Set default avatar if none is present in user data
-    if (!avatarPreview) {
-        setAvatarPreview('/images/default-avatar.png');
+    if (user) {
+        setName(user.displayName || '');
+        setEmail(user.email || '');
+        setAvatarPreview(user.photoURL || '/images/default-avatar.png');
     }
-  }, [avatarPreview]);
+  }, [user]);
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
@@ -38,6 +45,30 @@ export default function ProfilePage() {
         setAvatarPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+    }
+  };
+  
+  const handleSaveChanges = async () => {
+    if (!user) return;
+    setIsSaving(true);
+    try {
+        await updateProfile(auth.currentUser!, {
+            displayName: name,
+            // photoURL will be handled differently, as it requires file upload to storage
+        });
+        toast({
+            title: 'Profile Updated',
+            description: 'Your changes have been successfully saved.',
+        });
+    } catch (error) {
+        console.error("Error updating profile: ", error);
+        toast({
+            variant: "destructive",
+            title: 'Update Failed',
+            description: 'There was an error saving your profile. Please try again.',
+        });
+    } finally {
+        setIsSaving(false);
     }
   };
   
@@ -65,7 +96,7 @@ export default function ProfilePage() {
                             <Avatar className="h-28 w-28 border-4 border-background shadow-md">
                                 <AvatarImage src={avatarPreview || ''} alt="User Avatar" />
                                 <AvatarFallback className="text-4xl">
-                                    {name.charAt(0).toUpperCase()}
+                                    {name ? name.charAt(0).toUpperCase() : ''}
                                 </AvatarFallback>
                             </Avatar>
                             <Button
@@ -119,9 +150,9 @@ export default function ProfilePage() {
                             <Label htmlFor="role">Role</Label>
                             <Input id="role" value="Administrator" disabled />
                         </div>
-                         <Button className="mt-4">
-                            <Save className="mr-2 h-4 w-4"/>
-                            Save Changes
+                         <Button className="mt-4" onClick={handleSaveChanges} disabled={isSaving}>
+                            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4"/>}
+                            {isSaving ? 'Saving...' : 'Save Changes'}
                         </Button>
                     </CardContent>
                 </Card>
