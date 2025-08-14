@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Link from 'next/link';
 import { ChevronRight, PlusCircle, Save, Trash2, GitFork } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface MappingRow {
   id: number;
@@ -36,6 +37,7 @@ const mockDevices = [
 
 
 export default function DataMappingPage() {
+    const { toast } = useToast();
     const [selectedDevice, setSelectedDevice] = React.useState<string | undefined>(mockDevices[0].id);
     const [mappings, setMappings] = React.useState<MappingRow[]>([]);
 
@@ -62,6 +64,13 @@ export default function DataMappingPage() {
     
     const deleteRow = (id: number) => {
         setMappings(current => current.filter(m => m.id !== id));
+    }
+
+    const handleSave = () => {
+        toast({
+            title: "Mapping Saved",
+            description: `Data mapping for device ${selectedDevice} has been successfully saved.`,
+        });
     }
 
   return (
@@ -142,7 +151,7 @@ export default function DataMappingPage() {
                     <Button variant="outline" onClick={addRow}>
                         <PlusCircle className="mr-2 h-4 w-4" /> Add Row
                     </Button>
-                    <Button>
+                    <Button onClick={handleSave}>
                         <Save className="mr-2 h-4 w-4" /> Save Mapping
                     </Button>
                 </div>
