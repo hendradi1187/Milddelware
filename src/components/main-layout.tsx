@@ -23,6 +23,7 @@ import {
   ClipboardCheck,
   LogOut,
   ShieldCheck,
+  User,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -74,8 +75,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   };
 
   const getPageTitle = () => {
+    // Special case for profile page
+    if (pathname === '/settings/profile') return 'My Profile';
+    
     const currentItem = allMenuItems.find(item => isMenuActive(item.href));
-    // For dashboard, we return an empty string to not show a title in the header
     return currentItem ? (currentItem.href === '/' ? '' : currentItem.label) : '';
   }
 
@@ -135,7 +138,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               <DropdownMenuTrigger asChild>
                 <div className="mt-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 px-2 flex items-center gap-3 cursor-pointer hover:bg-black/10 rounded-md p-2">
                     <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.photoURL ?? "https://placehold.co/40x40.png"} alt={user.displayName ?? 'User'} data-ai-hint="person portrait"/>
+                        <AvatarImage src={user.photoURL ?? "/images/default-avatar.png"} alt={user.displayName ?? 'User'} data-ai-hint="person portrait"/>
                         <AvatarFallback>{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col group-data-[collapsible=icon]:hidden">
@@ -150,7 +153,12 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               <DropdownMenuContent align="end" className="w-56 mb-2">
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>Profile</DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                     <Link href="/settings/profile">
+                        <User className="mr-2 h-4 w-4" />
+                        <span>Profile</span>
+                      </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={logout}>
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Log out</span>

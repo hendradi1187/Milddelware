@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Trash2, Edit, ShieldCheck, UserCog, Eye, ChevronRight } from 'lucide-react';
+import { MoreHorizontal, Trash2, Edit, ShieldCheck, UserCog, Eye, ChevronRight, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AddUserWizard } from '@/components/settings/add-user-wizard';
 import Link from 'next/link';
@@ -98,6 +98,12 @@ export default function UserManagementPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild>
+                             <Link href="/settings/profile">
+                                <User className="mr-2 h-4 w-4" />
+                                View Profile
+                              </Link>
+                          </DropdownMenuItem>
                           <DropdownMenuItem>
                             <Edit className="mr-2 h-4 w-4" />
                             Edit User

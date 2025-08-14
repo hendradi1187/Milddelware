@@ -1,5 +1,5 @@
-
 'use client';
+import React from 'react';
 import { MainLayout } from '@/components/main-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +16,6 @@ import {
   FileText,
   LucideIcon
 } from 'lucide-react';
-import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
