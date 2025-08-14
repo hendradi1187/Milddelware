@@ -67,7 +67,8 @@ const systemModules: Module[] = [
         id: 'business-logic',
         title: 'Business Logic Layer',
         description: 'Rules and decision-making processes',
-        icon: SlidersHorizontal
+        icon: SlidersHorizontal,
+        href: '/settings/business-logic'
     },
     {
         id: 'lis-comm',
