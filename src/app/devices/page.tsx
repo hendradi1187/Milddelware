@@ -5,12 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Wifi, WifiOff, TriangleAlert, type LucideIcon, PlusCircle, Search, Clock, Server, Power, PowerOff } from 'lucide-react';
+import { Wifi, WifiOff, TriangleAlert, type LucideIcon, PlusCircle, Search, Clock, Server, Power, PowerOff, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AddDeviceWizard } from '@/components/devices/add-device-wizard';
 import { Input } from '@/components/ui/input';
+import Link from 'next/link';
 
 type DeviceStatus = 'Online' | 'Offline' | 'Standby' | 'Error';
 
@@ -186,7 +187,15 @@ export default function DevicesPage() {
         <div className="lg:col-span-1">
             <Card className="sticky top-20">
                  <CardHeader>
-                    <CardTitle>Device Details</CardTitle>
+                    {selectedDevice && !isLoading ? (
+                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground -mt-1 mb-2">
+                            <span className="font-medium text-foreground">Device Details</span>
+                            <ChevronRight className="h-4 w-4" />
+                            <span className="font-semibold text-primary truncate">{selectedDevice.name}</span>
+                        </div>
+                    ) : (
+                         <CardTitle>Device Details</CardTitle>
+                    )}
                 </CardHeader>
                 <CardContent>
                     {isLoading || !selectedDevice ? (
@@ -238,6 +247,7 @@ export default function DevicesPage() {
                                             <div className="text-right font-mono text-xs">{m.glul}</div>
                                         </React.Fragment>
                                     ))}
+                                    {selectedDevice.mapping.length === 0 && <p className="col-span-2 text-muted-foreground text-xs text-center">No mapping configured.</p>}
                                 </div>
                             </div>
 
