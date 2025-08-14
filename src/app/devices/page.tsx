@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CheckCircle, PlusCircle, Save, Trash2 } from 'lucide-react';
+import { CheckCircle, PlusCircle, Save, Trash2, Edit, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 // Initial Data
@@ -46,6 +46,7 @@ export default function DevicesPage() {
   
   // State for Mappings
   const [mappings, setMappings] = React.useState<MappingRow[]>(initialMappingData);
+  const [editingMappingId, setEditingMappingId] = React.useState<number | null>(null);
   const [lisCode, setLisCode] = React.useState('');
   const [middlewareCode, setMiddlewareCode] = React.useState('');
   const [instrumentCode, setInstrumentCode] = React.useState('');
@@ -69,8 +70,15 @@ export default function DevicesPage() {
         description: "Simulating a test connection... Success!",
     });
   }
+
+  const clearEditor = () => {
+    setLisCode('');
+    setMiddlewareCode('');
+    setInstrumentCode('');
+    setEditingMappingId(null);
+  }
   
-  const handleSaveMapping = (e: React.FormEvent) => {
+  const handleSaveOrUpdateMapping = (e: React.FormEvent) => {
     e.preventDefault();
     if(!lisCode || !middlewareCode || !instrumentCode) {
         toast({
@@ -80,20 +88,31 @@ export default function DevicesPage() {
         });
         return;
     }
-    const newMapping: MappingRow = {
-        id: Date.now(),
-        lisCode,
-        middlewareCode,
-        instrumentCode
-    };
-    setMappings(prev => [...prev, newMapping]);
-    setLisCode('');
-    setMiddlewareCode('');
-    setInstrumentCode('');
-    toast({
-        title: "Mapping Saved",
-        description: "New data mapping has been added.",
-    });
+
+    if(editingMappingId !== null) {
+      // Update existing mapping
+      const updatedMapping = { id: editingMappingId, lisCode, middlewareCode, instrumentCode };
+      setMappings(prev => prev.map(m => m.id === editingMappingId ? updatedMapping : m));
+      toast({
+          title: "Mapping Updated",
+          description: "Data mapping has been successfully updated.",
+      });
+    } else {
+      // Add new mapping
+      const newMapping: MappingRow = {
+          id: Date.now(),
+          lisCode,
+          middlewareCode,
+          instrumentCode
+      };
+      setMappings(prev => [...prev, newMapping]);
+      toast({
+          title: "Mapping Saved",
+          description: "New data mapping has been added.",
+      });
+    }
+
+    clearEditor();
   }
 
   const handleDeleteMapping = (id: number) => {
@@ -102,6 +121,13 @@ export default function DevicesPage() {
           title: "Mapping Deleted",
           description: "The data mapping has been removed.",
       });
+  }
+
+  const handleEditMapping = (mapping: MappingRow) => {
+    setEditingMappingId(mapping.id);
+    setLisCode(mapping.lisCode);
+    setMiddlewareCode(mapping.middlewareCode);
+    setInstrumentCode(mapping.instrumentCode);
   }
   
   const handleClearLogs = () => {
@@ -233,7 +259,7 @@ export default function DevicesPage() {
                                 <TableHead>LIS Code</TableHead>
                                 <TableHead>Middleware Code</TableHead>
                                 <TableHead>Instrument Code</TableHead>
-                                <TableHead className="w-[50px]"></TableHead>
+                                <TableHead className="w-[100px] text-right">Actions</TableHead>
                             </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -242,7 +268,10 @@ export default function DevicesPage() {
                                         <TableCell className="font-semibold">{row.lisCode}</TableCell>
                                         <TableCell>{row.middlewareCode}</TableCell>
                                         <TableCell>{row.instrumentCode}</TableCell>
-                                        <TableCell>
+                                        <TableCell className="text-right">
+                                            <Button variant="ghost" size="icon" onClick={() => handleEditMapping(row)}>
+                                                <Edit className="h-4 w-4 text-muted-foreground" />
+                                            </Button>
                                             <Button variant="ghost" size="icon" onClick={() => handleDeleteMapping(row.id)}>
                                                 <Trash2 className="h-4 w-4 text-muted-foreground" />
                                             </Button>
@@ -262,14 +291,14 @@ export default function DevicesPage() {
 
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Mapping Editor</CardTitle>
+                    <CardTitle>{editingMappingId ? 'Edit Mapping' : 'Add New Mapping'}</CardTitle>
                     <div className="flex gap-2">
                         <Button variant="outline" disabled>Import</Button>
                         <Button variant="outline" disabled>Export</Button>
                     </div>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleSaveMapping} className="space-y-4">
+                  <form onSubmit={handleSaveOrUpdateMapping} className="space-y-4">
                     <div className="grid grid-cols-1 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="lis-code">LIS Code</Label>
@@ -284,9 +313,18 @@ export default function DevicesPage() {
                             <Input id="instrument-code" placeholder="e.g., GLUC" value={instrumentCode} onChange={e => setInstrumentCode(e.target.value)} />
                         </div>
                     </div>
-                    <Button type="submit" className="w-full">
-                        <Save className="mr-2 h-4 w-4" /> Save Mapping
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button type="submit" className="w-full">
+                            {editingMappingId ? <Save className="mr-2 h-4 w-4" /> : <PlusCircle className="mr-2 h-4 w-4" />}
+                            {editingMappingId ? 'Update Mapping' : 'Save New Mapping'}
+                        </Button>
+                        {editingMappingId && (
+                            <Button type="button" variant="outline" className="w-full" onClick={clearEditor}>
+                                <XCircle className="mr-2 h-4 w-4" />
+                                Cancel Edit
+                            </Button>
+                        )}
+                    </div>
                   </form>
                 </CardContent>
             </Card>
